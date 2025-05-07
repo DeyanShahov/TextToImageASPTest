@@ -1,105 +1,109 @@
-// Функция за инициализиране на функционалност на бутоните
-function initButtonsFunctionality(buttonType, categoryName) {
-    $(document).ready(function() {
-        // Селектор за всички бутони от дадения тип
-        var buttonSelector = '[data-btn-type="' + buttonType + '"]';
-        
-        // Обработка на клик върху бутон
-        $(buttonSelector).click(function() {
-            var btnId = $(this).data('btn-id');
-            
-            // Запазва избора в sessionStorage
-            sessionStorage.setItem(buttonType + '-selection', btnId);
-            
-            // Премахва активната класа от всички бутони
-            $(buttonSelector).removeClass('active btn-success').addClass('btn-primary');
-            
-            // Добавя активната класа към избрания бутон
-            $(this).removeClass('btn-primary').addClass('active btn-success');
-            
-            // Показва потвърждение
-            showConfirmation(btnId, categoryName);
-        });
-        
-        // Проверява дали има вече запазен избор и го маркира като активен
-        var savedChoice = sessionStorage.getItem(buttonType + '-selection');
-        if (savedChoice) {
-            $('#' + buttonType + '-btn-' + savedChoice).removeClass('btn-primary').addClass('active btn-success');
-        }
-        
-        // Показва потвърждение за избора
-        function showConfirmation(btnId, categoryName) {
-            // Премахва всички предишни съобщения
-            $('.button-confirmation').remove();
-            
-            // Създава потвърждаващо съобщение
-            var confirmationMsg = $('<div class="alert alert-success alert-dismissible fade show mt-3 button-confirmation" role="alert">')
-                .html('Избрахте Бутон ' + btnId + ' от ' + categoryName + '. <a href="/Home/Index" class="alert-link">Назад към началната страница</a>.')
-                .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
-            
-            // Добавя съобщението след бутоните
-            $('.row.justify-content-center').append(
-                $('<div class="col-md-8 col-lg-6 mt-3 button-confirmation-container">').append(confirmationMsg)
-            );
-            
-            // Автоматично изчезва след 3 секунди
-            setTimeout(function() {
-                confirmationMsg.alert('close');
-            }, 3000);
-        }
-    });
-}
-
 // Функция за инициализиране на функционалност на бутоните с множествен избор
 function newButtonsFunctionality(buttonType) {
-    $(document).ready(function() {
-        const storageKey = buttonType + '-selections'; // Динамичен ключ за sessionStorage
-        const buttonSelector = '[data-btn-type="' + buttonType + '"]';
-        const buttonIdPrefix = buttonType + '-btn-'; // Префикс за ID-тата на бутоните
+    const storageKey = buttonType + '-selections'; // Динамичен ключ за sessionStorage
+    const buttonSelector = '[data-btn-type="' + buttonType + '"]';
+    const buttonIdPrefix = buttonType + '-btn-'; // Префикс за ID-тата на бутоните
 
-        // Функция за извличане на избраните ID-та от sessionStorage
-        function getSelectedIds() {
-            const storedValue = sessionStorage.getItem(storageKey);
-            return storedValue ? JSON.parse(storedValue) : [];
+    //Функция за извличане на избраните ID-та от sessionStorage
+    function getSelectedIds() {
+        const storedValue = sessionStorage.getItem(storageKey);
+        return storedValue ? JSON.parse(storedValue) : [];
+    }
+
+    //Функция за запазване на избраните ID-та в sessionStorage
+    function saveSelectedIds(ids) {
+        sessionStorage.setItem(storageKey, JSON.stringify(ids));
+    }
+
+    function localSetButtonToPrimary($button, currentSelectedIds, btnId) {
+        $button.removeClass('active btn-success').addClass('btn-primary');
+        const index = currentSelectedIds.indexOf(btnId);
+        if (index > -1) {
+            currentSelectedIds.splice(index, 1);
         }
+    }
 
-        // Функция за запазване на избраните ID-та в sessionStorage
-        function saveSelectedIds(ids) {
-            sessionStorage.setItem(storageKey, JSON.stringify(ids));
+    function localSetButtonToActive($button, currentSelectedIds, btnId) {
+        $button.removeClass('btn-primary').addClass('active btn-success');
+        if (currentSelectedIds.indexOf(btnId) === -1) {
+            currentSelectedIds.push(btnId);
         }
+    }
 
-        // Обработка на клик върху бутон - използваме event delegation за по-голяма гъвкавост
-        $(document).on('click', buttonSelector, function() {
-            var $button = $(this);
-            // data-btn-id съхранява уникалната част от ID-то (напр. числото)
-            var btnId = $button.data('btn-id'); 
-            var selectedIds = getSelectedIds();
+    function localSetImageStyle($button, currentSelectedIds, btnId) {
+        var buttonName = $button.text().trim(); // Текстът на бутона
+        var styleName = buttonType; // Типът на бутона (категорията) - от closure
 
-            if ($button.hasClass('active')) {
-                // Бутонът е активен, деактивираме го
-                $button.removeClass('active btn-success').addClass('btn-primary');
-                const index = selectedIds.indexOf(btnId);
-                if (index > -1) {
-                    selectedIds.splice(index, 1);
+        // Изпращане на AJAX заявка към сървъра за запис на стила
+        $.ajax({
+            url: '/Home/AddStyleSelection',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            success: function(response) {
+                if (response.success) {
+                    console.log('Стилът е успешно записан на сървъра:', response.message);
+                    localSetButtonToActive($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
+                    saveSelectedIds(currentSelectedIds); // Запазва в sessionStorage САМО при успех
+                } else {
+                    console.warn('Неуспешен запис на стила на сървъра:', response.message);
+                    // При неуспех не променяме sessionStorage, за да остане консистентен с последното успешно състояние
                 }
-            } else {
-                // Бутонът не е активен, активираме го
-                $button.removeClass('btn-primary').addClass('active btn-success');
-                if (selectedIds.indexOf(btnId) === -1) {
-                    selectedIds.push(btnId);
-                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Грешка при AJAX заявката за запис на стил:', status, error, xhr.responseText);
             }
-            saveSelectedIds(selectedIds);
         });
+    }
 
-        // Функция за прилагане на първоначално избраните бутони при зареждане на страницата
-        function applyInitialSelections() {
-            var initialSelectedIds = getSelectedIds();
-            initialSelectedIds.forEach(function(id) {
-                $('#' + buttonIdPrefix + id).removeClass('btn-primary').addClass('active btn-success');
-            });
+    function localRemoveImageStyle($button, currentSelectedIds, btnId) {
+        var buttonName = $button.text().trim(); // Текстът на бутона
+        var styleName = buttonType; // Типът на бутона (категорията) - от closure
+
+        // Изпращане на AJAX заявка към сървъра за изтриване на стила
+        $.ajax({
+            url: '/Home/RemoveStyleSelection',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            success: function (response) {
+                if (response.success) {
+                    console.log('Стилът е успешно изтрит от сървъра:', response.message);
+                    localSetButtonToPrimary($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
+                    saveSelectedIds(currentSelectedIds); // Запазва в sessionStorage САМО при успех
+                } else {
+                    console.warn('Неуспешно изтриване на стила от сървъра:', response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Грешка при AJAX заявката за изтриване на стил:', status, error, xhr.responseText);
+            }
+        });
+    }
+
+    // Обработка на клик върху бутон - използваме event delegation за по-голяма гъвкавост
+    $(document).on('click', buttonSelector, function() {
+        var $button = $(this);
+        var btnId = $button.data('btn-id'); // data-btn-id съхранява уникалната част от ID-то
+        var selectedIds = getSelectedIds(); // Взимаме текущото състояние от sessionStorage
+
+        if ($button.hasClass('active')) {
+            // Бутонът е активен, деактивираме го
+            localRemoveImageStyle($button, selectedIds, btnId);
+        } else {
+            // Бутонът не е активен, активираме го
+            localSetImageStyle($button, selectedIds, btnId);
         }
-
-        applyInitialSelections(); // Прилагане на запазените селекции
     });
+
+    // Функция за прилагане на първоначално избраните бутони при зареждане на страницата
+    function applyInitialSelections() {
+        var initialSelectedIds = getSelectedIds();
+        initialSelectedIds.forEach(function(id) {
+            $('#' + buttonIdPrefix + id).removeClass('btn-primary').addClass('active btn-success');
+        });
+    }
+
+    applyInitialSelections(); // Прилагане на запазените селекции при инициализация
 }
+
