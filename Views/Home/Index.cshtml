@@ -10,21 +10,22 @@
                     <h1 class="display-5 text-center mb-0">Генериране на изображение</h1>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <h4>Последно избрани опции:</h4>
-                            <div id="selected-options" class="p-3 border rounded mb-3">
-                                <p>Все още няма избрани опции</p>
-                            </div>                   
+                    <!-- Секция за въвеждане на текст и бутони -->
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-8 col-12 mb-2 mb-md-0">
+                            <input type="text" class="form-control form-control-lg" id="text-prompt" placeholder="моля въведете текст">
+                        </div>
+                        <div class="col-md-4 col-12 d-flex justify-content-md-end justify-content-around">
+                            <button class="btn btn-success btn-lg me-2" id="go-button">GO</button>
+                            <button class="btn btn-info btn-lg" id="rand-button">RAND</button>
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <!-- Секция за показване на изображение -->
+                    <div class="row mt-4">
                         <div class="col-md-12">
-                            <div id="result-container" class="text-center">
-                                <div class="placeholder-box p-5 border rounded">
-                                    <p class="mb-0">Тук ще се визуализира резултатът</p>
-                                </div>
+                            <div id="image-display-area" class="text-center border rounded p-2">
+                                <img src="https://picsum.photos/800/600" class="img-fluid rounded" alt="Генерирано изображение" id="generated-image">
                             </div>
                         </div>
                     </div>
@@ -36,68 +37,18 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            // Проверка за запазени опции в sessionStorage
-            updateSelectionDisplay();
-
-            // Функция за обновяване на дисплея с избраните опции
-            function updateSelectionDisplay() {
-                const selections = {
-                    photography: sessionStorage.getItem('photography-selection'),
-                    painting: sessionStorage.getItem('painting-selection'),
-                    illustration: sessionStorage.getItem('illustration-selection'),
-                    drawing: sessionStorage.getItem('drawing-selection'),
-                    threed: sessionStorage.getItem('threed-selection'),
-                    vector: sessionStorage.getItem('vector-selection'),
-                    design: sessionStorage.getItem('design-selection'),
-                    fashion: sessionStorage.getItem('fashion-selection'),
-                    art: sessionStorage.getItem('art-selection'),
-                    craft: sessionStorage.getItem('craft-selection'),
-                    experimental: sessionStorage.getItem('experimental-selection')
-                };
-                
-                let hasSelections = false;
-                let htmlContent = '<ul class="list-group">';
-                
-                // Обхожда всички категории и показва избраните опции
-                for (const [category, value] of Object.entries(selections)) {
-                    if (value) {
-                        hasSelections = true;
-                        let categoryName = getCategoryName(category);
-                        htmlContent += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${categoryName}
-                            <span class="badge bg-primary rounded-pill">Бутон ${value}</span>
-                        </li>`;
-                    }
-                }
-                
-                htmlContent += '</ul>';
-                
-                if (hasSelections) {
-                    $('#selected-options').html(htmlContent);
-                } else {
-                    $('#selected-options').html('<p>Все още няма избрани опции</p>');
-                }
-            }
-            
-            // Връща името на категорията на български
-            function getCategoryName(category) {
-                const names = {
-                    'photography': 'Фотография',
-                    'painting': 'Картина',
-                    'illustration': 'Илюстрация',
-                    'drawing': 'Рисунка',
-                    'threed': '3D',
-                    'vector': 'Вектор',
-                    'design': 'Дизайн',
-                    'fashion': 'Мода',
-                    'art': 'Арт',
-                    'craft': 'Занаят',
-                    'experimental': 'Експериментален'
-                };
-                
-                return names[category] || category;
-            }
-        });
+        // Място за бъдещ JavaScript код, ако е необходим за новите елементи (напр. event handlers за бутоните "GO" и "RAND")
+        // $(document).ready(function() {
+        //     $('#go-button').on('click', function() {
+        //         var promptText = $('#text-prompt').val();
+        //         console.log('GO clicked. Prompt:', promptText);
+        //         // Тук ще добавите логика за генериране на изображение
+        //     });
+        //
+        //     $('#rand-button').on('click', function() {
+        //         console.log('RAND clicked');
+        //         // Тук ще добавите логика за генериране на случаен текст или изображение
+        //     });
+        // });
     </script>
 }

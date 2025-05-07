@@ -8,78 +8,112 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TextToImageASPTest.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Вертикално меню -->
-            <div class="col-md-2 sidebar">
-                <div class="d-flex flex-column">
-                    <a class="navbar-brand py-2 mb-3" asp-area="" asp-controller="Home" asp-action="Index">TextToImageASPTest</a>
-                    <nav class="nav flex-column">
-                        <ul class="navbar-nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Photography">Фотография</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Painting">Картина</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Illustration">Илюстрация</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Drawing">Рисунка</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ThreeD">3D</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Vector">Вектор</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Design">Дизайн</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Fashion">Мода</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Art">Арт</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Craft">Занаят</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Experimental">Експериментален</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-            
-            <!-- Основно съдържание -->
-            <div class="col-md-10 ms-auto main-content">
-                <main role="main" class="pb-3">
-                    @RenderBody()
-                </main>
-                
-                <footer class="border-top footer text-muted">
-                    <div class="container">
-                        &copy; 2025 - TextToImageASPTest - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </div>
-                </footer>
-            </div>
+<body class="body-with-fixed-top">
+    <header class="top-header fixed-top">
+        <button id="menu-toggle" class="btn btn-outline-light me-3">MENU</button>
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TextToImageASPTest</a>
+    </header>
+
+    <nav id="collapsible-sidebar">
+        <div class="sidebar-content p-3">
+            <h5 class="mb-3">Навигация</h5>
+            <ul class="navbar-nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetPhotographyOptions", "Home")" data-category="photography" asp-area="" asp-controller="Home" asp-action="Photography">Фотография</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetPaintingOptions", "Home")" data-category="painting" asp-area="" asp-controller="Home" asp-action="Painting">Картина</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetIllustrationOptions", "Home")" data-category="illustration" asp-area="" asp-controller="Home" asp-action="Illustration">Илюстрация</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetDrawingOptions", "Home")" data-category="drawing" asp-area="" asp-controller="Home" asp-action="Drawing">Рисунка</a>
+                </li>
+                 <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetThreeDOptions", "Home")" data-category="threed" asp-area="" asp-controller="Home" asp-action="ThreeD">3D</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetVectorOptions", "Home")" data-category="vector" asp-area="" asp-controller="Home" asp-action="Vector">Вектор</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetDesignOptions", "Home")" data-category="design" asp-area="" asp-controller="Home" asp-action="Design">Дизайн</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetFashionOptions", "Home")" data-category="fashion" asp-area="" asp-controller="Home" asp-action="Fashion">Мода</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetArtOptions", "Home")" data-category="art" asp-area="" asp-controller="Home" asp-action="Art">Арт</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetCraftOptions", "Home")" data-category="craft" asp-area="" asp-controller="Home" asp-action="Craft">Занаят</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ajax-load-link" data-url="@Url.Action("GetExperimentalOptions", "Home")" data-category="experimental" asp-area="" asp-controller="Home" asp-action="Experimental">Експериментален</a>
+                </li>
+            </ul>
         </div>
-    </div>
+    </nav>
+    <div class="sidebar-overlay"></div>
+
+    <div class="main-container"> <!-- Начало на main-container -->
+        <div class="container"> <!-- Премахваме mt-4, тъй като body-with-fixed-top вече има padding-top -->
+            <main role="main" class="pb-3">
+                @RenderBody()        
+            </main>
+        </div>
+        <footer class="border-top footer text-muted mt-auto py-3 bg-light">
+            <div class="container">
+                &copy; @DateTime.Now.Year - TextToImageASPTest - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </footer>
+    </div> <!-- Край на main-container -->
+
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/buttons.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        $(document).ready(function () {
+            const menuToggle = $('#menu-toggle');
+            const sidebar = $('#collapsible-sidebar');
+            const sidebarOverlay = $('.sidebar-overlay');
+            const body = $('body');
+
+            menuToggle.on('click', function (e) {
+                e.stopPropagation();
+                sidebar.toggleClass('open');
+                sidebarOverlay.toggle(sidebar.hasClass('open'));
+                body.toggleClass('sidebar-active', sidebar.hasClass('open')); // За спиране на скрола на body
+            });
+
+            function closeSidebar() {
+                if (sidebar.hasClass('open')) {
+                    sidebar.removeClass('open');
+                    sidebarOverlay.hide();
+                    body.removeClass('sidebar-active');
+                }
+            }
+
+            // Затваряне на менюто при клик на линк в него
+            sidebar.find('.nav-link').on('click', function () {
+                closeSidebar();
+            });
+
+            // Затваряне на менюто при клик върху overlay-a
+            sidebarOverlay.on('click', function () {
+                closeSidebar();
+            });
+        });
+    </script>
 </body>
+
 </html>

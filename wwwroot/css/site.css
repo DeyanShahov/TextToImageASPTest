@@ -21,6 +21,10 @@ body {
   margin-bottom: 60px;
 }
 
+.body-with-fixed-top {
+  padding-top: 56px; 
+}
+
 /* Стилове за вертикалната навигация */
 .sidebar {
   background-color: #f8f9fa;

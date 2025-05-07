@@ -46,3 +46,110 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+/* Добавете тези стилове в site.css */
+
+/* .body-with-fixed-top {
+    padding-top: 56px; 
+} */
+
+body.sidebar-active {
+    overflow: hidden; /* Предотвратява скролирането на основното съдържание, когато менюто е отворено */
+}
+
+.top-header {
+    /* background-color: #343a40; /* Тъмен фон, ако предпочитате */
+    background-color: #f8f9fa; /* Светъл фон, подобно на Bootstrap navbar-light */
+    border-bottom: 1px solid #dee2e6;
+    color: #212529; /* Тъмен текст за светъл фон */
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem; /* Стандартен padding за navbar */
+    height: 56px; /* Стандартна височина */
+}
+
+.top-header .navbar-brand {
+    color: #212529; /* Тъмен текст */
+}
+
+.top-header .navbar-brand:hover {
+    color: #0056b3; /* По-тъмен цвят при hover */
+}
+
+#menu-toggle {
+    /* color: white; */ /* За тъмен фон */
+    /* border-color: rgba(255, 255, 255, 0.5); */ /* За тъмен фон */
+    color: #212529; /* Тъмен текст за бутона */
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+#menu-toggle:hover {
+    /* background-color: rgba(255, 255, 255, 0.1); */ /* За тъмен фон */
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+#collapsible-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Скрито извън екрана; коригирайте ширината ако е нужно */
+    width: 280px; /* Ширина на страничното меню */
+    height: 100vh;
+    background-color: #ffffff; /* Бял фон за менюто */
+    border-right: 1px solid #dee2e6; /* Граница отдясно */
+    z-index: 1040; /* Над .top-header и съдържанието */
+    transition: left 0.3s ease-in-out;
+    overflow-y: auto; /* Позволява скролиране, ако съдържанието е по-дълго */
+}
+
+#collapsible-sidebar.open {
+    left: 0; /* Показва менюто */
+    box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Сянка за по-добро отделяне */
+}
+
+#collapsible-sidebar .sidebar-content {
+    padding-top: 1rem; /* Отстояние в горната част на съдържанието на менюто */
+}
+
+#collapsible-sidebar h5 { /* Заглавие "Навигация" */
+    color: #495057;
+    padding: 0 1rem;
+}
+
+#collapsible-sidebar .nav-link {
+    padding: 0.65rem 1rem;
+    color: #343a40; /* Тъмен текст за линковете */
+    border-radius: 0.25rem;
+    margin: 0.1rem 0.5rem;
+}
+
+#collapsible-sidebar .nav-link:hover,
+#collapsible-sidebar .nav-link.active { /* Може да добавите .active клас при нужда */
+    background-color: #e9ecef;
+    color: #0056b3;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачен черен фон */
+    z-index: 1035; /* Между менюто и съдържанието */
+    display: none; /* Скрито по подразбиране */
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 56px); /* 100% височина минус височината на top-header */
+}
+
+.main-container .container {
+    flex-grow: 1; /* Позволява на основното съдържание да заеме наличното пространство */
+}
+
+.footer {
+    /* Вече има mt-auto, което го позиционира на дъното, ако main-container е flex */
+}
+
