@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "Картина";
+    var paintingStyles = new List<string>
+    {
+        "Painting | Abstract Expressionism","Painting | Acrylic","Painting | Aerosol","Painting | Children Book Art",
+        "Painting | Chinese Ink Brush","Painting | Digital","Painting | Digital Fantasy Game Art","Painting | Fantasy Art",
+        "Painting | Fantasy Cartoon","Painting | Fantasy Digital Art","Painting | Fantasy Game Concept Item",
+        "Painting | Fresco","Painting | Gouache","Painting | Gouache Cartoon","Painting | Graffiti","Painting | Grimdark",
+        "Painting | Impasto","Painting | Impressionism Painting Style","Painting | Magic Realism","Painting | Oil Painting","Painting | Palette Knife",
+        "Painting | Pointillism","Painting | Renaissance","Painting | Retrofuturism","Painting | Sumi-e Painting","Painting | Watercolor",
+        "Painting | Watercolor > Cartoon","Painting | Watercolor on White Background",
+    };
+    var prefixToRemove = "Painting | ";
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Картина</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < paintingStyles.Count; i++)
+                {
+                    var fullStyleName = paintingStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="painting-btn-@btnNumericId" data-btn-type="painting" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('painting');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 

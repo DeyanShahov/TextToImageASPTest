@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Дизайн";
+    var designStyles = new List<string>
+    {
+        "Design | Avatar","Design | Banner","Design | Brochure","Design | Business card","Design | Event Invitation",
+        "Design | Favicon","Design | Flyer","Design | Icon Design","Design | Icon Design Simple Black","Design | Infographic",
+        "Design | Letterhead","Design | Logo","Design | Magazine Layout","Design | Menu","Design | Packaging",
+        "Design | Poster","Design | Website",
+    };
+    var prefixToRemove = "Design | ";
+    var categoryName = "Дизайн"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Дизайн</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < designStyles.Count; i++)
+                {
+                    var fullStyleName = designStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="design-btn-@btnNumericId" data-btn-type="design" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('design');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 

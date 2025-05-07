@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Занаят";
+    var craftStyles = new List<string>
+    {
+        "Craft | Ceramic","Craft | Ceramic > Cibulak","Craft | Ceramic > Glass","Craft | Ceramic > Moche",
+        "Craft | Ceramic > Porcelain","Craft | Crochet","Craft | Crochet > Amigurumi","Craft | Cross-stitching",
+        "Craft | Embossed","Craft | Embroidery","Craft | Felt","Craft | Gobelin Tapestry","Craft | Kirigami",
+        "Craft | Knitting Art","Craft | Lapidary","Craft | Laser Engraving Wood","Craft | Leatherworking",
+        "Craft | Macrame","Craft | Marquetry","Craft | Metalwork","Craft | Mosaic","Craft | Mosaic > Roman",
+        "Craft | Needlepoint","Craft | Origami","Craft | Paper Cut","Craft | Plasticine","Craft | Pyrography",
+        "Craft | Quilted","Craft | Scrapbooking","Craft | Sculpture","Craft | Sculpture > Bronze","Craft | Sculpture > Alebrije",
+        "Craft | Sculpture > Bas-relief","Craft | Sculpture > Clay","Craft | Sculpture > Haniwa","Craft | Sculpture > Jade",
+        "Craft | Sculpture > Marble","Craft | Sculpture > Netsuke","Craft | Sculpture > Olmec","Craft | Sculpture > Gold",
+        "Craft | Sculpture > Sand","Craft | Sculpture > Stone","Craft | Sculpture > Wood","Craft | Sculpture > Wood Carving",
+        "Craft | Shadowbox > Paper","Craft | Shadowbox > Wood","Craft | 3D Layered Plywood Wall Art",
+        "Craft | Stained Glass","Craft | Tapestry",
+    };
+    var prefixToRemove = "Craft | ";
+    var categoryName = "Занаят"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Занаят</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < craftStyles.Count; i++)
+                {
+                    var fullStyleName = craftStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="craft-btn-@btnNumericId" data-btn-type="craft" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('craft');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 
+} 

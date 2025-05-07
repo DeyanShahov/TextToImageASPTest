@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Мода";
+    var fashionStyles = new List<string>
+    {
+        "Fashion | Beachwear","Fashion | Bikini","Fashion | Boho","Fashion | Cosplay","Fashion | Cyberpunk",
+        "Fashion | Emo Fashion","Fashion | Glamour","Fashion | Goth","Fashion | Metalhead","Fashion | Normcore",
+        "Fashion | Preppy","Fashion | Psychobilly","Fashion | Rave","Fashion | Sci-Fi","Fashion | Sexy",
+        "Fashion | Sportswear","Fashion | Steampunk","Fashion | Streetwear","Fashion | Vintage","Fashion | Winter",
+    };
+    var prefixToRemove = "Fashion | ";
+    var categoryName = "Мода"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Мода</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < fashionStyles.Count; i++)
+                {
+                    var fullStyleName = fashionStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="fashion-btn-@btnNumericId" data-btn-type="fashion" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('fashion');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+}

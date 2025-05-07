@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Експериментален";
+    var experimentalStyles = new List<string>
+    {
+        "Experimental | Alien Creature 3D",
+"Experimental | Apocalyptic Surrealism",
+"Experimental | Aztec Sculpture 3D",
+"Experimental | Bio-Luminous Art",
+"Experimental | Bio-Mechanical Fantasy",
+"Experimental | Biomechanical Angel 3D",
+"Experimental | Cute Animal 3D",
+"Experimental | Cute Boy 3D",
+"Experimental | Cute Cyber Ninja 3D",
+"Experimental | Cute Cyberpunk",
+"Experimental | Cute Girl 3D",
+"Experimental | Cute Knight 3D",
+"Experimental | Cute Monster 3D",
+"Experimental | Cute Robot 3D",
+"Experimental | Cute Victorian",
+"Experimental | Cyber Couture",
+"Experimental | Cybernetic Flora",
+"Experimental | Dreamscape Mapping",
+"Experimental | Dreamwave",
+"Experimental | Dreamy Animal",
+"Experimental | Eldritch Minimalism",
+"Experimental | Ethereal Assassin 3D",
+"Experimental | Ethereal Fluidity",
+"Experimental | Ethereal Steam",
+"Experimental | Fae Fantasy",
+"Experimental | Fairy Tale Chronicles",
+"Experimental | Fairy Tale Cute",
+"Experimental | Geomancer 3D",
+"Experimental | Holographic Chic",
+"Experimental | Legends Digital Painting",
+"Experimental | Liquid Light",
+"Experimental | Mythical Mechanica 3D",
+"Experimental | Nebula Dreams",
+"Experimental | Neural Dreams",
+"Experimental | Occult Expressionism",
+"Experimental | Pastel Goth Cute",
+"Experimental | Phantasmagoric Abstract",
+"Experimental | Phantasmal Visions",
+"Experimental | Phantom Rococo",
+"Experimental | Quantum Sketching",
+"Experimental | Radiant Fantasy",
+"Experimental | Robot Cute",
+"Experimental | Shadow Mage 3D",
+"Experimental | Voodoo Surrealism",
+"Experimental | Whimsical Chibi",
+    };
+    var prefixToRemove = "Experimental | ";
+    var categoryName = "Експериментален"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Експериментален</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < experimentalStyles.Count; i++)
+                {
+                    var fullStyleName = experimentalStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="experimental-btn-@btnNumericId" data-btn-type="experimental" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('experimental');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 

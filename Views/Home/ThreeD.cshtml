@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "3D";
+    var threeDStyles = new List<string>
+    {
+        "3D | Abstract","3D | Abstract > Fluid Dynamics","3D | Abstract > Soft Forms","3D | Architectural","3D | Character",
+        "3D | Character > Cartoon","3D | Character > Cartoon Cute","3D | Game Asset","3D | Hard Surface","3D | Icon",
+        "3D | Isometric","3D | Low Poly","3D | Mech","3D | Model","3D | Product","3D | Sci-Fi","3D | Vehicle",
+    };
+    var prefixToRemove = "3D | ";
+    var categoryName = "3D"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">3D</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < threeDStyles.Count; i++)
+                {
+                    var fullStyleName = threeDStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="3d-btn-@btnNumericId" data-btn-type="3d" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('3d');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 

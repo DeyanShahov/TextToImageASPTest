@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Арт";
+    var artStyles = new List<string>
+    {
+        "ART | African Traditional","ART | Afrofuturism Art","ART | Ancient Egyptian Mural","ART | Atompunk",
+        "ART | Baroque","ART | Biomechanical","ART | Biopunk","ART | Byzantine Icon",
+        "ART | Cartoon","ART | Claymation","ART | Comic Book Style","ART | Constructivism",
+        "ART | Cubism","ART | Cybergoth Art","ART | Cyberpunk","ART | Dadaism",
+        "ART | Dark Academia","ART | Deco","ART | Dieselpunk","ART | Egyptian",
+        "ART | Futurism","ART | Gilded","ART | Glitch","ART | Gothic",
+        "ART | Interstellar","ART | Japanese Traditional","ART | Linocut","ART | Lucha Libre","ART | Mayan",
+        "ART | Minoan","ART | Naive","ART | Necropunk","ART | Nouveau","ART | Pixel Art",
+        "ART | Pop Art","ART | Propaganda","ART | Psychedelic","ART | Rococo","ART | Solarpunk",
+        "ART | Stencil","ART | Street Art","ART | Steampunk","ART | Surrealism","ART | Synthwave",
+        "ART | Ukrainian Folk Art","ART | Vaporwave","ART | Westernpunk",
+    };
+    var prefixToRemove = "ART | ";
+    var categoryName = "Арт"; // Used in confirmation message
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4 text-center">Арт</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="row g-3">
+                @for (int i = 0; i < artStyles.Count; i++)
+                {
+                    var fullStyleName = artStyles[i];
+                    var buttonText = fullStyleName;
+                    if (fullStyleName.StartsWith(prefixToRemove))
+                    {
+                        buttonText = fullStyleName.Substring(prefixToRemove.Length);
+                    }
+                    var btnNumericId = i + 1; // 1-based ID
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 py-3" id="art-btn-@btnNumericId" data-btn-type="art" data-btn-id="@btnNumericId">
+                            @buttonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>       
+        $(document).ready(function() {
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            newButtonsFunctionality('art');
+            // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
+            // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
+            $('.confirmation-message-wrapper').remove(); 
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
+    </script>
+} 
