@@ -112,23 +112,23 @@ function newButtonsFunctionality(buttonType) {
 function genrateImage() {
     // Място за бъдещ JavaScript код, ако е необходим за новите елементи (напр. event handlers за бутоните "GO" и "RAND")
     $(document).ready(function () {
-        $('#go-button').on('click', function () {
+        function performImageGenerationRequest(isRandomRequest) {
             const promptText = $('#text-prompt').val().trim();
-            if (!promptText) {
-                 alert('Моля, въведете текст за генериране на изображение.');
-                 return;
+            if (!isRandomRequest && !promptText) { // Проверка за текст само ако не е RAND заявка
+                alert('Моля, въведете текст за генериране на изображение.');
+                return;
             }
 
-            const payload = JSON.stringify({ isRandom: false, prompt: promptText });
+            const payload = JSON.stringify({ isRandom: isRandomRequest, prompt: promptText });
 
             $.ajax({
                 url: '/Home/GenerateImageAsync',
                 type: 'POST',
                 contentType: 'application/json',
                 data: payload,  
-                //headers: {
-                //    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                //},
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
                 beforeSend: function () {
                     $('#generated-image').css('opacity', 0.5);
                     $('#loading-spinner').show();
@@ -158,14 +158,15 @@ function genrateImage() {
                 }
             });
             // Тук ще добавите логика за генериране на изображение
+        };
+        
+        $('#go-button').on('click', function () {
+            performImageGenerationRequest(false);
         });
 
-
-        //
-        //     $('#rand-button').on('click', function() {
-        //         console.log('RAND clicked');
-        //         // Тук ще добавите логика за генериране на случаен текст или изображение
-        //     });
+        $('#rand-button').on('click', function () {
+            performImageGenerationRequest(true);
+        });
     });
 }
 

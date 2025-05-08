@@ -9,13 +9,14 @@
                 <div class="card-header bg-primary text-white">
                     <h1 class="display-5 text-center mb-0">Генериране на изображение</h1>
                 </div>
-                <div class="card-body">
+                <div class="card-body">                   
                     <!-- Секция за въвеждане на текст и бутони -->
                     <div class="row mb-3 align-items-center">
                         <div class="col-md-8 col-12 mb-2 mb-md-0">
                             <input type="text" class="form-control form-control-lg" id="text-prompt" placeholder="моля въведете текст">
                         </div>
                         <div class="col-md-4 col-12 d-flex justify-content-md-end justify-content-around">
+                            @Html.AntiForgeryToken()
                             <button class="btn btn-success btn-lg me-2" id="go-button">GO</button>
                             <button class="btn btn-info btn-lg" id="rand-button">RAND</button>
                         </div>

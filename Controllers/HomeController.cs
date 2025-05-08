@@ -168,14 +168,14 @@ namespace TextToImageASPTest.Controllers
 
         //public async Task<IActionResult> GenerateImageAsync(bool isRandom, string prompt)
         [HttpPost("Home/GenerateImageAsync")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model)
         {
 
             bool isRandom = model.IsRandom;
             string prompt = model.Prompt;
 
-            //string promptText = !isRandom ? (prompt ?? "").Trim() : CreatePortrait.GeneratePortraitPrompt();
-            string promptText = (prompt ?? "").Trim();
+            string promptText = !isRandom ? (prompt ?? "").Trim() : CreatePortrait.GeneratePortraitPrompt();
 
             if (string.IsNullOrEmpty(promptText))
             {
