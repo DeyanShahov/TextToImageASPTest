@@ -25,7 +25,7 @@
                     }
                     var btnNumericId = i + 1; // 1-based ID
                     <div class="col-6">
-                        <button class="btn btn-primary w-100 py-3" id="3d-btn-@btnNumericId" data-btn-type="3d" data-btn-id="@btnNumericId">
+                        <button class="btn btn-primary w-100 py-3" id="3D-btn-@btnNumericId" data-btn-type="3D" data-btn-id="@btnNumericId">
                             @buttonText
                         </button>
                     </div>
@@ -39,7 +39,7 @@
     <script>       
         $(document).ready(function() {
             // Извикване на новата универсална функция за бутоните от тип "painting"
-            newButtonsFunctionality('3d');
+            newButtonsFunctionality('3D');
             // Почистване на стари елементи за потвърждение, специфични за тази страница, ако е необходимо.
             // Ако такива елементи вече не се генерират, тези редове може да не са нужни.
             $('.confirmation-message-wrapper').remove(); 
