@@ -34,6 +34,7 @@ function newButtonsFunctionality(buttonType) {
         var buttonName = $button.text().trim(); // Текстът на бутона
         var styleName = buttonType; // Типът на бутона (категорията) - от closure
 
+        console.log();
         // Изпращане на AJAX заявка към сървъра за запис на стила
         $.ajax({
             url: '/Home/AddStyleSelection',
@@ -107,3 +108,82 @@ function newButtonsFunctionality(buttonType) {
     applyInitialSelections(); // Прилагане на запазените селекции при инициализация
 }
 
+
+function genrateImage() {
+    // Място за бъдещ JavaScript код, ако е необходим за новите елементи (напр. event handlers за бутоните "GO" и "RAND")
+    $(document).ready(function () {
+        $('#go-button').on('click', function () {
+            const promptText = $('#text-prompt').val().trim();
+            if (!promptText) {
+                 alert('Моля, въведете текст за генериране на изображение.');
+                 return;
+            }
+
+            const payload = JSON.stringify({ isRandom: false, prompt: promptText });
+
+            $.ajax({
+                url: '/Home/GenerateImageAsync',
+                type: 'POST',
+                contentType: 'application/json',
+                data: payload,  
+                //headers: {
+                //    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                //},
+                beforeSend: function () {
+                    $('#generated-image').css('opacity', 0.5);
+                    $('#loading-spinner').show();
+                    $('#go-button').prop('disabled', true); // Деактивирайте бутона по време на заявка
+                    $('#rand-button').prop('disabled', true);
+                },
+                success: function (response) {
+                    if (response.success && response.imageUrl) {
+                        $('#generated-image').attr('src', response.imageUrl).css('opacity', 1);
+                    } else {
+                        console.error('Image generation failed:', response.message);
+                        alert(response.message || 'Грешка при генериране на изображението.');
+                        // Може да върнете placeholder изображение или да покажете съобщение за грешка в #image-display-area
+                        $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error generating image via AJAX:', status, error);
+                    alert('Възникна грешка при комуникация със сървъра. Моля, опитайте отново.');
+                    $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
+                },
+                complete: function () {
+                    // По желание: премахнете индикатора за зареждане
+                    $('#loading-spinner').hide();
+                    $('#go-button').prop('disabled', false); // Активирайте бутона отново
+                    $('#rand-button').prop('disabled', false);
+                }
+            });
+            // Тук ще добавите логика за генериране на изображение
+        });
+
+
+        //
+        //     $('#rand-button').on('click', function() {
+        //         console.log('RAND clicked');
+        //         // Тук ще добавите логика за генериране на случаен текст или изображение
+        //     });
+    });
+}
+
+function praska() {
+    console.log('PRASKA clicked');
+    $.ajax({
+        url: '/Home/NovaFunctions', // Уверете се, че този URL е правилен
+        type: 'GET', // Заявката трябва да е GET, съгласно [HttpGet] атрибута на сървъра
+        dataType: 'text', // Указваме, че очакваме текстов отговор
+        success: function (response) {
+            // 'response' тук ще бъде текстовият низ, върнат от сървъра
+            console.log('Съобщение от сървъра:', response);
+            // Можете да визуализирате съобщението на страницата, ако е необходимо
+            // например: alert('Съобщение от сървъра: ' + response);
+        },
+        error: function (xhr, status, error) {
+            console.error('Грешка при AJAX заявката към NovaFunctions:', status, error);
+            alert('Възникна грешка при опит за връзка със сървъра.');
+        }
+    });
+};

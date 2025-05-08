@@ -21,14 +21,21 @@
                         </div>
                     </div>
                     
-                    <!-- Секция за показване на изображение -->
+                   <!-- Секция за показване на изображение -->
                     <div class="row mt-4">
                         <div class="col-md-12">
-                            <div id="image-display-area" class="text-center border rounded p-2">
-                                <img src="https://picsum.photos/800/600" class="img-fluid rounded" alt="Генерирано изображение" id="generated-image">
+                            <div id="image-display-area" class="text-center border rounded p-2" style="position: relative;">
+                                <img src="https://picsum.photos/800/600" class="img-fluid rounded" alt="Генерирано изображение" id="generated-image" style="opacity: 1; transition: opacity 0.3s ease-in-out;">
+                                <!-- Спинерът е преместен тук и стилизиран да е в центъра и по-голям -->
+                                <div id="loading-spinner" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                    <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"> <!-- Промяна на text-primary на text-light -->
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                              
                 </div>
             </div>
         </div>
@@ -37,18 +44,27 @@
 
 @section Scripts {
     <script>
-        // Място за бъдещ JavaScript код, ако е необходим за новите елементи (напр. event handlers за бутоните "GO" и "RAND")
-        // $(document).ready(function() {
-        //     $('#go-button').on('click', function() {
-        //         var promptText = $('#text-prompt').val();
-        //         console.log('GO clicked. Prompt:', promptText);
-        //         // Тук ще добавите логика за генериране на изображение
-        //     });
-        //
-        //     $('#rand-button').on('click', function() {
-        //         console.log('RAND clicked');
-        //         // Тук ще добавите логика за генериране на случаен текст или изображение
-        //     });
-        // });
+        $(document).ready(function() {
+            const promptInput = $('#text-prompt');
+            const promptStorageKey = 'userTextPrompt';
+
+            // Зареждане на запазения текст при зареждане на страницата
+            const savedPrompt = localStorage.getItem(promptStorageKey);
+            if (savedPrompt) {
+                promptInput.val(savedPrompt);
+            }
+
+            // Запазване на текста при всяка промяна
+            promptInput.on('input', function() {
+                localStorage.setItem(promptStorageKey, $(this).val());
+            });
+
+            // Извикване на новата универсална функция за бутоните от тип "painting"
+            genrateImage();
+            praska();
+
+            // Почистване на стари съобщения (ако е необходимо)
+            $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и
+        });
     </script>
 }

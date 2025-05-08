@@ -5,38 +5,49 @@ a.navbar-brand {
   white-space: normal;
   text-align: center;
   word-break: break-all;
+  /* color: #0077cc; -- ще бъде презаписано от .top-header .navbar-brand */
 }
 
 a {
-  color: #0077cc;
+  color: #4dabf7; /* По-светло синьо за линкове на тъмен фон */
+}
+
+a:hover {
+    color: #74c0fc; /* Още по-светло при hover */
 }
 
 .btn-primary {
   color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+  background-color: #0056b3; /* По-тъмно синьо за основен бутон */
+  border-color: #004085;
+}
+
+.btn-primary:hover {
+    background-color: #004a75;
+    border-color: #003352;
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
   color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+  background-color: #0056b3; /* В съответствие с .btn-primary */
+  border-color: #004085;
 }
 
 .border-top {
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid #444; /* Рамка за тъмна тема */
 }
 .border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid #444; /* Рамка за тъмна тема */
 }
 
 .box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+  box-shadow: 0 .25rem .75rem rgba(255, 255, 255, .05); /* Светла сянка на тъмен фон */
 }
 
 button.accept-policy {
   font-size: 1rem;
   line-height: inherit;
+  /* Ако този бутон има тъмен фон, текстът трябва да е светъл */
 }
 
 .footer {
@@ -45,6 +56,9 @@ button.accept-policy {
   width: 100%;
   white-space: nowrap;
   line-height: 60px;
+  background-color: #222222; /* Тъмен фон за футъра */
+  color: #c0c0c0; /* Светъл текст за футъра */
+  border-top: 1px solid #383838; /* Фина горна рамка за футъра */
 }
 
 /* Добавете тези стилове в site.css */
@@ -58,10 +72,9 @@ body.sidebar-active {
 }
 
 .top-header {
-    /* background-color: #343a40; /* Тъмен фон, ако предпочитате */
-    background-color: #f8f9fa; /* Светъл фон, подобно на Bootstrap navbar-light */
-    border-bottom: 1px solid #dee2e6;
-    color: #212529; /* Тъмен текст за светъл фон */
+    background-color: #222222; /* Тъмен фон за хедъра */
+    border-bottom: 1px solid #383838; /* Рамка за тъмна тема */
+    color: #f5f5f5; /* Светъл текст */
     display: flex;
     align-items: center;
     padding: 0.5rem 1rem; /* Стандартен padding за navbar */
@@ -69,23 +82,21 @@ body.sidebar-active {
 }
 
 .top-header .navbar-brand {
-    color: #212529; /* Тъмен текст */
+    color: #f5f5f5; /* Светъл текст */
 }
 
 .top-header .navbar-brand:hover {
-    color: #0056b3; /* По-тъмен цвят при hover */
+    color: #ffffff; /* По-ярко бяло при hover */
 }
 
 #menu-toggle {
-    /* color: white; */ /* За тъмен фон */
-    /* border-color: rgba(255, 255, 255, 0.5); */ /* За тъмен фон */
-    color: #212529; /* Тъмен текст за бутона */
-    border-color: rgba(0, 0, 0, 0.1);
+    color: #f5f5f5; /* Светъл текст за бутона */
+    border-color: rgba(255, 255, 255, 0.2); /* Светла рамка */
 }
 
 #menu-toggle:hover {
-    /* background-color: rgba(255, 255, 255, 0.1); */ /* За тъмен фон */
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(255, 255, 255, 0.1); /* Светъл фон при hover */
+    color: #ffffff;
 }
 
 #collapsible-sidebar {
@@ -94,8 +105,8 @@ body.sidebar-active {
     left: -280px; /* Скрито извън екрана; коригирайте ширината ако е нужно */
     width: 280px; /* Ширина на страничното меню */
     height: 100vh;
-    background-color: #ffffff; /* Бял фон за менюто */
-    border-right: 1px solid #dee2e6; /* Граница отдясно */
+    background-color: #2b2b2b; /* Тъмен фон за страничното меню */
+    border-right: 1px solid #444; /* Рамка за тъмна тема */
     z-index: 1040; /* Над .top-header и съдържанието */
     transition: left 0.3s ease-in-out;
     overflow-y: auto; /* Позволява скролиране, ако съдържанието е по-дълго */
@@ -103,7 +114,7 @@ body.sidebar-active {
 
 #collapsible-sidebar.open {
     left: 0; /* Показва менюто */
-    box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Сянка за по-добро отделяне */
+    box-shadow: 0 0 15px rgba(255,255,255,0.1); /* Светла сянка за тъмна тема */
 }
 
 #collapsible-sidebar .sidebar-content {
@@ -111,21 +122,21 @@ body.sidebar-active {
 }
 
 #collapsible-sidebar h5 { /* Заглавие "Навигация" */
-    color: #495057;
+    color: #d0d0d0; /* Светло сиво за заглавието */
     padding: 0 1rem;
 }
 
 #collapsible-sidebar .nav-link {
     padding: 0.65rem 1rem;
-    color: #343a40; /* Тъмен текст за линковете */
+    color: #c0c0c0; /* Светло сиво за линковете */
     border-radius: 0.25rem;
     margin: 0.1rem 0.5rem;
 }
 
 #collapsible-sidebar .nav-link:hover,
 #collapsible-sidebar .nav-link.active { /* Може да добавите .active клас при нужда */
-    background-color: #e9ecef;
-    color: #0056b3;
+    background-color: #383838; /* По-тъмен фон при hover/active */
+    color: #ffffff; /* Бял текст за active/hover */
 }
 
 .sidebar-overlay {
@@ -152,4 +163,3 @@ body.sidebar-active {
 .footer {
     /* Вече има mt-auto, което го позиционира на дъното, ако main-container е flex */
 }
-
