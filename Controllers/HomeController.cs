@@ -100,19 +100,18 @@ namespace TextToImageASPTest.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+
         [HttpPost]
-        public IActionResult AddStyleSelection([FromBody] StyleSelectionModel model)
+        public IActionResult AddStyleSelection([FromBody] StyleFullNameModel styleFullName)
         {
-            if(model == null || string.IsNullOrWhiteSpace(model.ButtonName) || string.IsNullOrWhiteSpace(model.StyleName))
+            if (styleFullName == null || string.IsNullOrWhiteSpace(styleFullName.buttonFullName) || string.IsNullOrWhiteSpace(styleFullName.buttonFullName))
             {
-                return BadRequest(new { success = false, message = "Невалидни данни."});
+                return BadRequest(new { success = false, message = "Невалидни данни." });
             }
 
             try
             {
-                string buttonStyle = model.StyleName.ToString();
-                string uppercaseButtonStyle = char.ToUpper(buttonStyle[0]) + buttonStyle.Substring(1);
-                bool success = data.AddStyle(model.ButtonName, uppercaseButtonStyle);
+                bool success = data.AddStyle(styleFullName.buttonFullName);
 
                 if (success)
                 {
@@ -132,30 +131,19 @@ namespace TextToImageASPTest.Controllers
             }
         }
 
+      
+
         [HttpPost]
-        public IActionResult RemoveStyleSelection([FromBody] StyleSelectionModel model)
+        public IActionResult RemoveStyleSelection([FromBody] StyleFullNameModel styleFullName)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.ButtonName) || string.IsNullOrWhiteSpace(model.StyleName))
+            if (styleFullName == null || string.IsNullOrWhiteSpace(styleFullName.buttonFullName) || string.IsNullOrWhiteSpace(styleFullName.buttonFullName))
             {
                 return BadRequest(new { success = false, message = "Невалидни данни." });
             }
             try
             {
-                string buttonStyle = model.StyleName.ToString();
-                string uppercaseButtonStyle = char.ToUpper(buttonStyle[0]) + buttonStyle.Substring(1);
-                data.RemoveStyle(model.ButtonName, uppercaseButtonStyle);
+                data.RemoveStyle(styleFullName.buttonFullName);
                 return Json(new { success = true, message = "Стилът е премахнат успешно." });
-
-                //bool success = data.RemoveStyle(model.ButtonName, uppercaseButtonStyle);
-                //if (success)
-                //{
-                //    return Json(new { success = true, message = "Стилът е премахнат успешно." });
-                //}
-                //else
-                //{
-                //    // Ако RemoveStyle връща false при неуспех (напр. стилът не съществува и не е премахнат)
-                //    return Json(new { success = false, message = "Стилът не беше премахнат (може би не съществува)." });
-                //}
             }
             catch (Exception ex)
             {
@@ -165,8 +153,23 @@ namespace TextToImageASPTest.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult ClearStyleSelection()
+        {
+            try
+            {
+                data.ClearSelectedStyles();
+                return Json(new { success = true, message = "Всички стилове са премахнати успешно." });
+            }
+            catch (Exception ex)
+            {
+                // Добра практика е да логвате грешката
+                // Logger.LogError(ex, "Error clearing style selection.");
+                return StatusCode(500, new { success = false, message = "Възникна сървърна грешка." });
+            }
+        }
 
-        //public async Task<IActionResult> GenerateImageAsync(bool isRandom, string prompt)
+
         [HttpPost("Home/GenerateImageAsync")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model)
@@ -280,5 +283,10 @@ namespace TextToImageASPTest.Controllers
     {
         public bool IsRandom { get; set; }
         public string Prompt { get; set; }
+    }
+
+    public class StyleFullNameModel
+    {
+        public string buttonFullName { get; set; }
     }
 }

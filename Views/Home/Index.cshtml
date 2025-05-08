@@ -19,6 +19,7 @@
                             @Html.AntiForgeryToken()
                             <button class="btn btn-success btn-lg me-2" id="go-button">GO</button>
                             <button class="btn btn-info btn-lg" id="rand-button">RAND</button>
+                            <button class="btn btn-info btn-lg" id="clear-button">CLEAR</button>
                         </div>
                     </div>
                     
@@ -63,6 +64,7 @@
             // Извикване на новата универсална функция за бутоните от тип "painting"
             genrateImage();
             praska();
+            clearCurrentStyle();
 
             // Почистване на стари съобщения (ако е необходимо)
             $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и

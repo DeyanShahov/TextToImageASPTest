@@ -33,6 +33,7 @@ function newButtonsFunctionality(buttonType) {
     function localSetImageStyle($button, currentSelectedIds, btnId) {
         var buttonName = $button.text().trim(); // Текстът на бутона
         var styleName = buttonType; // Типът на бутона (категорията) - от closure
+        var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
 
         console.log();
         // Изпращане на AJAX заявка към сървъра за запис на стила
@@ -40,7 +41,10 @@ function newButtonsFunctionality(buttonType) {
             url: '/Home/AddStyleSelection',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            //data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            data: JSON.stringify({ buttonFullName: buttonFullName }),
+            //contentType: 'text/plain; charset=UTF-8',
+            //data: buttonFullName,
             success: function(response) {
                 if (response.success) {
                     console.log('Стилът е успешно записан на сървъра:', response.message);
@@ -60,13 +64,15 @@ function newButtonsFunctionality(buttonType) {
     function localRemoveImageStyle($button, currentSelectedIds, btnId) {
         var buttonName = $button.text().trim(); // Текстът на бутона
         var styleName = buttonType; // Типът на бутона (категорията) - от closure
+        var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
 
         // Изпращане на AJAX заявка към сървъра за изтриване на стила
         $.ajax({
             url: '/Home/RemoveStyleSelection',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            //data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
+            data: JSON.stringify({ buttonFullName: buttonFullName }),
             success: function (response) {
                 if (response.success) {
                     console.log('Стилът е успешно изтрит от сървъра:', response.message);
@@ -166,9 +172,59 @@ function genrateImage() {
 
         $('#rand-button').on('click', function () {
             performImageGenerationRequest(true);
+        });      
+    });
+}
+
+function clearCurrentStyle() {
+    $('#clear-button').on('click', function () {
+        if (!confirm("Сигурни ли сте, че искате да изчистите всички избрани стилове?")) {
+            return; // Потребителят е отказал
+        }
+
+        $.ajax({
+            url: '/Home/ClearStyleSelection', // Път до вашия екшън в контролера
+            type: 'POST',
+            // headers: {
+            //     // Уверете се, че имате @Html.AntiForgeryToken() във вашата View (напр. Index.cshtml или _Layout.cshtml)
+            //     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            // },
+            success: function(response) {
+                if (response.success) {
+                    console.log('Стиловете са успешно изчистени на сървъра:', response.message);
+
+                    // 1. Изчистване на sessionStorage
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        const key = sessionStorage.key(i);
+                        if (key && key.endsWith('-selections')) {
+                            sessionStorage.removeItem(key);
+                            console.log('Изчистен sessionStorage ключ:', key);
+                        }
+                    }
+
+                    // 2. Нулиране на UI на бутоните за стилове
+                    $('[data-btn-type]').each(function() {
+                        var $button = $(this);
+                        if ($button.hasClass('active') || $button.hasClass('btn-success')) {
+                            $button.removeClass('active btn-success').addClass('btn-primary');
+                        }
+                    });
+
+                    alert('Всички избрани стилове бяха успешно изчистени.');
+
+                } else {
+                    console.warn('Неуспешно изчистване на стиловете от сървъра:', response.message);
+                    alert('Грешка при изчистване на стиловете: ' + (response.message || 'Неизвестна сървърна грешка.'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Грешка при AJAX заявката за изчистване на стилове:', status, error, xhr.responseText);
+                alert('Възникна грешка при комуникация със сървъра за изчистване на стиловете.');
+            }
         });
     });
 }
+
 
 function praska() {
     console.log('PRASKA clicked');
