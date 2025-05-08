@@ -128,7 +128,7 @@ body.sidebar-active {
 
 #collapsible-sidebar .nav-link {
     padding: 0.65rem 1rem;
-    color: #c0c0c0; /* Светло сиво за линковете */
+    color: #ffffff; /* Светло сиво за линковете */
     border-radius: 0.25rem;
     margin: 0.1rem 0.5rem;
 }
