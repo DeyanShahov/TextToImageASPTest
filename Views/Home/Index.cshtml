@@ -20,10 +20,60 @@
                             <button class="btn btn-success btn-lg me-2" id="go-button">GO</button>
                             <button class="btn btn-info btn-lg" id="rand-button">RAND</button>
                             <button class="btn btn-info btn-lg" id="clear-button">CLEAR</button>
+                            <button class="btn btn-info btn-lg" id="settings-button">SET</button>
                         </div>
                     </div>
                     
-                   <!-- Секция за показване на изображение -->
+                    <!-- Панел за допълнителни настройки (скрит по подразбиране) -->
+                    <div id="advanced-settings-panel" class="mt-3 p-3 border rounded" style="display: none;">
+                        <h5 class="mb-3">Допълнителни настройки</h5>
+                        
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" id="enable-cfg-scale">
+                                <label class="form-check-label" for="enable-cfg-scale">
+                                    Активирай CFG Scale
+                                </label>
+                            </div>
+                            <label for="cfg-scale-slider" class="form-label">CFG Scale: <span id="cfg-scale-value">5</span></label>
+                            <input type="range" class="form-range" min="1" max="9" step="0.5" value="5" id="cfg-scale-slider" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" id="enable-scheduler">
+                                <label class="form-check-label" for="enable-scheduler">
+                                    Активирай Scheduler
+                                </label>
+                            </div>
+                            <label class="form-label d-block">Scheduler:</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="scheduler-options" id="scheduler-normal" value="normal" checked disabled>
+                                <label class="form-check-label" for="scheduler-normal">Normal</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="scheduler-options" id="scheduler-karras" value="karras" disabled>
+                                <label class="form-check-label" for="scheduler-karras">Karras</label>
+                            </div>
+                        </div>
+
+
+                        <!-- Поле за положителни настройки -->
+                        <div class="mb-3">
+                            <label for="positive-prompt-additions" class="form-label">Положителни настройки (добавки към промпта):</label>
+                            <textarea class="form-control" id="positive-prompt-additions" rows="2" placeholder="Напр. best quality, masterpiece"></textarea>
+                        </div>
+
+                        <!-- Поле за отрицателни настройки -->
+                        <div class="mb-3">
+                            <label for="negative-prompt-additions" class="form-label">Отрицателни настройки (нежелани елементи):</label>
+                            <textarea class="form-control" id="negative-prompt-additions" rows="2" placeholder="Напр. worst quality, ugly, deformed"></textarea>
+                        </div>
+
+                    </div>
+                    <!-- Край на панела за допълнителни настройки -->
+
+                    <!-- Секция за показване на изображение -->
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <div id="image-display-area" class="text-center border rounded p-2" style="position: relative;">
@@ -65,6 +115,7 @@
             genrateImage();
             praska();
             clearCurrentStyle();
+            initializeAdvancedSettingsToggle(); // Преименувахме функцията за яснота
 
             // Почистване на стари съобщения (ако е необходимо)
             $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и

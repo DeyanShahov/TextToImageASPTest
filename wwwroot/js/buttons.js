@@ -31,8 +31,6 @@ function newButtonsFunctionality(buttonType) {
     }
 
     function localSetImageStyle($button, currentSelectedIds, btnId) {
-        var buttonName = $button.text().trim(); // Текстът на бутона
-        var styleName = buttonType; // Типът на бутона (категорията) - от closure
         var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
 
         console.log();
@@ -41,10 +39,7 @@ function newButtonsFunctionality(buttonType) {
             url: '/Home/AddStyleSelection',
             type: 'POST',
             contentType: 'application/json',
-            //data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
             data: JSON.stringify({ buttonFullName: buttonFullName }),
-            //contentType: 'text/plain; charset=UTF-8',
-            //data: buttonFullName,
             success: function(response) {
                 if (response.success) {
                     console.log('Стилът е успешно записан на сървъра:', response.message);
@@ -62,8 +57,6 @@ function newButtonsFunctionality(buttonType) {
     }
 
     function localRemoveImageStyle($button, currentSelectedIds, btnId) {
-        var buttonName = $button.text().trim(); // Текстът на бутона
-        var styleName = buttonType; // Типът на бутона (категорията) - от closure
         var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
 
         // Изпращане на AJAX заявка към сървъра за изтриване на стила
@@ -71,7 +64,6 @@ function newButtonsFunctionality(buttonType) {
             url: '/Home/RemoveStyleSelection',
             type: 'POST',
             contentType: 'application/json',
-            //data: JSON.stringify({ buttonName: buttonName, styleName: styleName }),
             data: JSON.stringify({ buttonFullName: buttonFullName }),
             success: function (response) {
                 if (response.success) {
@@ -125,16 +117,29 @@ function genrateImage() {
                 return;
             }
 
-            const payload = JSON.stringify({ isRandom: isRandomRequest, prompt: promptText });
+            const advancedSettings = {
+                useCfgScale: $('#enable-cfg-scale').is(':checked'),
+                cfgScaleValue: $('#enable-cfg-scale').is(':checked') ? parseFloat($('#cfg-scale-slider').val()) : null,
+                useSampler: $('#enable-sampler').is(':checked'),
+                samplerValue: $('#enable-sampler').is(':checked') ? $('input[name="sampler-options"]:checked').val() : null,
+                positivePromptAdditions: $('#positive-prompt-additions').val().trim(),
+                negativePromptAdditions: $('#negative-prompt-additions').val().trim()
+            };
+
+            const payload = JSON.stringify({ 
+                isRandom: isRandomRequest, 
+                prompt: promptText,
+                ...advancedSettings // Добавяме събраните допълнителни настройки
+            });
 
             $.ajax({
                 url: '/Home/GenerateImageAsync',
                 type: 'POST',
                 contentType: 'application/json',
                 data: payload,  
-                headers: {
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                },
+                // headers: {
+                //     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                // },
                 beforeSend: function () {
                     $('#generated-image').css('opacity', 0.5);
                     $('#loading-spinner').show();
@@ -244,3 +249,118 @@ function praska() {
         }
     });
 };
+
+// Функция за управление на видимостта на панела с допълнителни настройки
+function initializeAdvancedSettingsToggle() {
+    const settingsButton = $('#settings-button');
+    const advancedSettingsPanel = $('#advanced-settings-panel');
+    const cfgScaleSlider = $('#cfg-scale-slider');
+    const cfgScaleValueDisplay = $('#cfg-scale-value');
+    const enableCfgScaleCheckbox = $('#enable-cfg-scale');
+    const positivePromptTextarea = $('#positive-prompt-additions');
+    const negativePromptTextarea = $('#negative-prompt-additions');
+
+    // Коригирани селектори спрямо HTML
+    const samplerRadios = $('input[name="scheduler-options"]'); 
+    const enableSamplerCheckbox = $('#enable-scheduler');
+
+    // Ключове за sessionStorage
+    const KEY_ENABLE_CFG = 'advancedSettings_enableCfgScale';
+    const KEY_CFG_VALUE = 'advancedSettings_cfgScaleValue';
+    const KEY_ENABLE_SAMPLER = 'advancedSettings_enableSampler';
+    const KEY_SAMPLER_VALUE = 'advancedSettings_samplerValue';
+    const KEY_POSITIVE_PROMPT = 'advancedSettings_positivePrompt';
+    const KEY_NEGATIVE_PROMPT = 'advancedSettings_negativePrompt';
+
+    // Функция за зареждане на настройките от sessionStorage
+    function loadSettings() {
+        // CFG Scale
+        const storedEnableCfg = sessionStorage.getItem(KEY_ENABLE_CFG);
+        if (storedEnableCfg !== null) {
+            enableCfgScaleCheckbox.prop('checked', JSON.parse(storedEnableCfg)).trigger('change'); // trigger change за да се обнови disabled състоянието
+        }
+        const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+        if (storedCfgValue !== null && enableCfgScaleCheckbox.is(':checked')) {
+            cfgScaleSlider.val(storedCfgValue).trigger('input'); // trigger input за да се обнови дисплея
+        } else if (!enableCfgScaleCheckbox.is(':checked')) {
+            cfgScaleSlider.val(5); // Връщане на default стойност, ако е disabled
+            cfgScaleValueDisplay.text(5);
+        }
+
+
+        // Sampler
+        const storedEnableSampler = sessionStorage.getItem(KEY_ENABLE_SAMPLER);
+        if (storedEnableSampler !== null) {
+            enableSamplerCheckbox.prop('checked', JSON.parse(storedEnableSampler)).trigger('change');
+        }
+        const storedSamplerValue = sessionStorage.getItem(KEY_SAMPLER_VALUE);
+        if (storedSamplerValue !== null && enableSamplerCheckbox.is(':checked')) {
+            samplerRadios.filter(`[value="${storedSamplerValue}"]`).prop('checked', true);
+        } else if (!enableSamplerCheckbox.is(':checked')) {
+             samplerRadios.filter('[value="normal"]').prop('checked', true); // Връщане на default, ако е disabled
+        }
+
+        // Text Prompts
+        const storedPositivePrompt = sessionStorage.getItem(KEY_POSITIVE_PROMPT);
+        if (storedPositivePrompt !== null) {
+            positivePromptTextarea.val(storedPositivePrompt);
+        }
+        const storedNegativePrompt = sessionStorage.getItem(KEY_NEGATIVE_PROMPT);
+        if (storedNegativePrompt !== null) {
+            negativePromptTextarea.val(storedNegativePrompt);
+        }
+    }
+
+    settingsButton.on('click', function() {
+        advancedSettingsPanel.slideToggle(); // Използваме slideToggle за плавен ефект
+    });
+
+    // Управление на CFG Scale Slider
+    if (enableCfgScaleCheckbox.length && cfgScaleSlider.length && cfgScaleValueDisplay.length) {
+        enableCfgScaleCheckbox.on('change', function() {
+            const isChecked = $(this).is(':checked');
+            cfgScaleSlider.prop('disabled', !isChecked);
+            sessionStorage.setItem(KEY_ENABLE_CFG, isChecked);
+            if (!isChecked) { // Ако се деактивира, може да искаме да нулираме стойността или да я запазим
+                // sessionStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
+            } else {
+                // Ако се активира и има запазена стойност, приложи я
+                const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+                if (storedCfgValue) cfgScaleSlider.val(storedCfgValue).trigger('input');
+            }
+        });
+
+        cfgScaleSlider.on('input', function() {
+            cfgScaleValueDisplay.text($(this).val());
+            if (enableCfgScaleCheckbox.is(':checked')) { // Запазваме само ако е активен
+                sessionStorage.setItem(KEY_CFG_VALUE, $(this).val());
+            }
+        });
+    }
+
+    // Управление на Sampler Radio Buttons
+    if (enableSamplerCheckbox.length && samplerRadios.length) {
+        enableSamplerCheckbox.on('change', function() {
+            const isChecked = $(this).is(':checked');
+            samplerRadios.prop('disabled', !isChecked);
+            sessionStorage.setItem(KEY_ENABLE_SAMPLER, isChecked);
+            if (!isChecked) {
+                // sessionStorage.removeItem(KEY_SAMPLER_VALUE); // По избор
+            } else {
+                const storedSamplerValue = sessionStorage.getItem(KEY_SAMPLER_VALUE);
+                if (storedSamplerValue) samplerRadios.filter(`[value="${storedSamplerValue}"]`).prop('checked', true);
+            }
+        });
+        samplerRadios.on('change', function() {
+            if (enableSamplerCheckbox.is(':checked')) { // Запазваме само ако е активен
+                sessionStorage.setItem(KEY_SAMPLER_VALUE, $(this).val());
+            }
+        });
+    }
+
+    // Управление на текстовите полета
+    positivePromptTextarea.on('input', function() { sessionStorage.setItem(KEY_POSITIVE_PROMPT, $(this).val()); });
+    negativePromptTextarea.on('input', function() { sessionStorage.setItem(KEY_NEGATIVE_PROMPT, $(this).val()); });
+
+    loadSettings(); // Зареждане на запазените настройки при инициализация
+}

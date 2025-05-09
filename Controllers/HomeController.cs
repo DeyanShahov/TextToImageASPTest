@@ -130,8 +130,7 @@ namespace TextToImageASPTest.Controllers
                 return StatusCode(500, new { success = false, message = "Възникна сървърна грешка." });
             }
         }
-
-      
+   
 
         [HttpPost]
         public IActionResult RemoveStyleSelection([FromBody] StyleFullNameModel styleFullName)
@@ -171,7 +170,7 @@ namespace TextToImageASPTest.Controllers
 
 
         [HttpPost("Home/GenerateImageAsync")]
-        [ValidateAntiForgeryToken]
+        // [ValidateAntiForgeryToken] // Премахнете или добавете токен в JS, ако е необходимо
         public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model)
         {
 
@@ -184,6 +183,24 @@ namespace TextToImageASPTest.Controllers
             {
                 return Json(new { success = false, message = "Моля, въведете текст за генериране на изображение."});
             }
+
+            // Актуализиране на AdvancedPromptSettings въз основа на получените данни от модела
+            AdvancedPromptSettings.ToUseCfgScale = model.UseCfgScale;
+            if (model.UseCfgScale && model.CfgScaleValue.HasValue)
+            {
+                AdvancedPromptSettings.CfgScale = model.CfgScaleValue.Value;
+            }
+
+            AdvancedPromptSettings.ToUseScheduler = model.UseSampler;
+            if (model.UseSampler && !string.IsNullOrEmpty(model.SamplerValue))
+            {
+                // Стойностите от HTML са "normal" и "karras"
+                AdvancedPromptSettings.IsKarras = model.SamplerValue.Equals("karras", StringComparison.OrdinalIgnoreCase);
+            }
+
+            AdvancedPromptSettings.PositivePrompt = model.PositivePromptAdditions ?? string.Empty;
+            AdvancedPromptSettings.NegativePrompt = model.NegativePromptAdditions ?? string.Empty;
+
 
             // --- Начало на промените за таймаут ---
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -264,6 +281,11 @@ namespace TextToImageASPTest.Controllers
         }
 
 
+
+
+
+
+
         [HttpGet]
         public string NovaFunctions()
         {
@@ -283,6 +305,14 @@ namespace TextToImageASPTest.Controllers
     {
         public bool IsRandom { get; set; }
         public string Prompt { get; set; }
+
+          // Нови свойства за допълнителните настройки
+        public bool UseCfgScale { get; set; }
+        public float? CfgScaleValue { get; set; } // Nullable, тъй като стойността е релевантна само ако UseCfgScale е true
+        public bool UseSampler { get; set; }
+        public string SamplerValue { get; set; } // Ще съдържа "normal" или "karras"
+        public string PositivePromptAdditions { get; set; }
+        public string NegativePromptAdditions { get; set; }
     }
 
     public class StyleFullNameModel
