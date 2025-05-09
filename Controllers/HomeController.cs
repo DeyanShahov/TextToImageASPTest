@@ -191,6 +191,8 @@ namespace TextToImageASPTest.Controllers
                 AdvancedPromptSettings.CfgScale = model.CfgScaleValue.Value;
             }
 
+            AdvancedPromptSettings.BatchSize = model.BatchCount;
+
             AdvancedPromptSettings.ToUseScheduler = model.UseSampler;
             if (model.UseSampler && !string.IsNullOrEmpty(model.SamplerValue))
             {
@@ -207,7 +209,7 @@ namespace TextToImageASPTest.Controllers
             try
             {
                 // Задаваме таймаут от 20 секунди
-                cts.CancelAfter(TimeSpan.FromSeconds(20));
+                cts.CancelAfter(TimeSpan.FromSeconds(30));
 
                 // Получаваме списък с имената на избраните стилове
                 var selectedStyle1Names = data.GetSelectedStyleNames();
@@ -222,15 +224,17 @@ namespace TextToImageASPTest.Controllers
                 _logger.LogInformation($"Image generation completed. Images received: {imageBytesList?.Count ?? 0}");
                 if(imageBytesList != null && imageBytesList.Count > 0){
                     // Показваме първото генерирано изображение
-                    //ResultImage.Source = ImageSource.FromStream(() => new MemoryStream(imageBytesList[0]));
-                    //AppSettings.imageCounter++; // Увеличаваме брояча на генерираните изображения
-                    byte[] firstImageBytes = imageBytesList[0];
-                    string base64Image = Convert.ToBase64String(firstImageBytes);
-                    // Препоръчително е да се укаже типа на изображението, ако е известен (напр. image/png, image/jpeg)
-                    string imageUrl = $"data:image/png;base64,{base64Image}"; 
-                    
+                    var imageUrls = new List<string>();
+                    foreach (var imageBytes in imageBytesList)
+                    {
+                        string base64Image = Convert.ToBase64String(imageBytes);
+                        // Препоръчително е да се укаже типа на изображението, ако е известен (напр. image/png, image/jpeg)
+                        // Засега приемаме PNG по подразбиране, както беше и преди.
+                        imageUrls.Add($"data:image/png;base64,{base64Image}");
+                    }
+
                     // AppSettings.imageCounter++; // Ако все още използвате този брояч
-                    return Json(new { success = true, imageUrl = imageUrl });
+                    return Json(new { success = true, imageUrls = imageUrls });
                 }
                 else
                 {
@@ -309,6 +313,7 @@ namespace TextToImageASPTest.Controllers
           // Нови свойства за допълнителните настройки
         public bool UseCfgScale { get; set; }
         public float? CfgScaleValue { get; set; } // Nullable, тъй като стойността е релевантна само ако UseCfgScale е true
+        public int BatchCount { get; set; } // Брой изображения за генериране
         public bool UseSampler { get; set; }
         public string SamplerValue { get; set; } // Ще съдържа "normal" или "karras"
         public string PositivePromptAdditions { get; set; }

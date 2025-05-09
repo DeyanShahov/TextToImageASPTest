@@ -122,6 +122,7 @@ function genrateImage() {
                 cfgScaleValue: $('#enable-cfg-scale').is(':checked') ? parseFloat($('#cfg-scale-slider').val()) : null,
                 useSampler: $('#enable-sampler').is(':checked'),
                 samplerValue: $('#enable-sampler').is(':checked') ? $('input[name="sampler-options"]:checked').val() : null,
+                batchCount: parseInt($('#batch-scale-slider').val(), 10) || 1,
                 positivePromptAdditions: $('#positive-prompt-additions').val().trim(),
                 negativePromptAdditions: $('#negative-prompt-additions').val().trim()
             };
@@ -147,13 +148,45 @@ function genrateImage() {
                     $('#rand-button').prop('disabled', true);
                 },
                 success: function (response) {
-                    if (response.success && response.imageUrl) {
-                        $('#generated-image').attr('src', response.imageUrl).css('opacity', 1);
+                    // if (response.success && response.imageUrl) {
+                    //     $('#generated-image').attr('src', response.imageUrl).css('opacity', 1);
+                    // } else {
+                    //     console.error('Image generation failed:', response.message);
+                    //     alert(response.message || 'Грешка при генериране на изображението.');
+                    //     // Може да върнете placeholder изображение или да покажете съобщение за грешка в #image-display-area
+                    //     $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
+                    // }
+
+                    if (response.success && response.imageUrls && response.imageUrls.length > 0) {
+                        const imageDisplayArea = $('#image-display-area');
+                        imageDisplayArea.empty(); // Изчистваме предишни изображения (без спинъра, ако е вътре)
+
+                        response.imageUrls.forEach(function(url, index) {
+                        // Създаваме нов img елемент за всяко изображение
+                            const imgElement = $('<img>')
+                                .attr('src', url)
+                                .addClass('img-fluid rounded mb-2') // Добавяме класове за стилизация, mb-2 за малко разстояние
+                                .attr('alt', 'Генерирано изображение ' + (index + 1));
+                            imageDisplayArea.append(imgElement);
+                        });
+                    // Уверете се, че спинърът е скрит и основният контейнер е видим с правилната прозрачност
+                    // $('#generated-image').css('opacity', 1); // Това може да не е нужно, ако imageDisplayArea управлява видимостта
+                    } else if (response.success && (!response.imageUrls || response.imageUrls.length === 0)) {
+                    // Случай, в който заявката е успешна, но няма върнати изображения
+                        console.warn('Image generation successful but no images returned.');
+                        alert('Генерирането беше успешно, но не бяха върнати изображения.');
+                        // Може да покажете placeholder или съобщение в #image-display-area
                     } else {
                         console.error('Image generation failed:', response.message);
                         alert(response.message || 'Грешка при генериране на изображението.');
-                        // Може да върнете placeholder изображение или да покажете съобщение за грешка в #image-display-area
-                        $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
+                        // Връщане на placeholder изображение или показване на съобщение за грешка
+                        const imageDisplayArea = $('#image-display-area');
+                        imageDisplayArea.empty(); // Изчистваме
+                        const errorImage = $('<img>')
+                            .attr('src', 'https://picsum.photos/800/600?grayscale&blur=2')
+                            .addClass('img-fluid rounded')
+                            .attr('alt', 'Грешка при генериране');
+                        imageDisplayArea.append(errorImage);
                     }
                 },
                 error: function (xhr, status, error) {
@@ -256,6 +289,8 @@ function initializeAdvancedSettingsToggle() {
     const advancedSettingsPanel = $('#advanced-settings-panel');
     const cfgScaleSlider = $('#cfg-scale-slider');
     const cfgScaleValueDisplay = $('#cfg-scale-value');
+    const batchSizeSlider = $('#batch-scale-slider');
+    const batchSizeValueDisplay = $('#batch-scale-value');
     const enableCfgScaleCheckbox = $('#enable-cfg-scale');
     const positivePromptTextarea = $('#positive-prompt-additions');
     const negativePromptTextarea = $('#negative-prompt-additions');
@@ -267,6 +302,7 @@ function initializeAdvancedSettingsToggle() {
     // Ключове за sessionStorage
     const KEY_ENABLE_CFG = 'advancedSettings_enableCfgScale';
     const KEY_CFG_VALUE = 'advancedSettings_cfgScaleValue';
+    const KEY_BATCH_VALUE = 'advancedSettings_batchSizeValue'; // Добавен ключ за batch size
     const KEY_ENABLE_SAMPLER = 'advancedSettings_enableSampler';
     const KEY_SAMPLER_VALUE = 'advancedSettings_samplerValue';
     const KEY_POSITIVE_PROMPT = 'advancedSettings_positivePrompt';
@@ -285,6 +321,16 @@ function initializeAdvancedSettingsToggle() {
         } else if (!enableCfgScaleCheckbox.is(':checked')) {
             cfgScaleSlider.val(5); // Връщане на default стойност, ако е disabled
             cfgScaleValueDisplay.text(5);
+        }
+
+        // BATCH Scale
+        const storedBatchValue = sessionStorage.getItem(KEY_BATCH_VALUE);
+        if (storedBatchValue !== null) {
+            batchSizeSlider.val(storedBatchValue).trigger('input'); // trigger input за да се обнови дисплея
+        } else {
+            batchSizeSlider.val(1); // Връщане на default стойност
+            batchSizeValueDisplay.text(1); // Актуализиране на дисплея
+            sessionStorage.setItem(KEY_BATCH_VALUE, '1'); // Запазване на default стойността в sessionStorage
         }
 
 
@@ -335,6 +381,29 @@ function initializeAdvancedSettingsToggle() {
             if (enableCfgScaleCheckbox.is(':checked')) { // Запазваме само ако е активен
                 sessionStorage.setItem(KEY_CFG_VALUE, $(this).val());
             }
+        });
+    }
+
+    // Управление на Batch Scale Slider
+    if (batchSizeSlider.length && batchSizeValueDisplay.length) {
+        //const isChecked = $(this).is(':checked');
+        //cfgScaleSlider.prop('disabled', !isChecked);
+        //sessionStorage.setItem(KEY_ENABLE_CFG, isChecked);
+        //if (!isChecked) { // Ако се деактивира, може да искаме да нулираме стойността или да я запазим
+        //   // sessionStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
+        //} else {
+        //   // Ако се активира и има запазена стойност, приложи я
+        //   const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+        //   if (storedCfgValue) cfgScaleSlider.val(storedCfgValue).trigger('input');
+        //}
+
+        //const storedBatchValue = sessionStorage.getItem(KEY_BATCH_VALUE);
+        //if (storedBatchValue) batchSizeSlider.val(storedBatchValue).trigger('input');
+
+
+        batchSizeSlider.on('input', function () {
+            batchSizeValueDisplay.text($(this).val());
+            sessionStorage.setItem(KEY_BATCH_VALUE, $(this).val());
         });
     }
 
