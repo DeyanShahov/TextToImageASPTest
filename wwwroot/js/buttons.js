@@ -127,6 +127,9 @@ function genrateImage() {
                 negativePromptAdditions: $('#negative-prompt-additions').val().trim()
             };
 
+            const imageDisplayArea = $('#image-display-area'); // Кешираме селектора
+            const loadingSpinner = $('#loading-spinner'); // Кешираме селектора
+
             const payload = JSON.stringify({ 
                 isRandom: isRandomRequest, 
                 prompt: promptText,
@@ -142,8 +145,14 @@ function genrateImage() {
                 //     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                 // },
                 beforeSend: function () {
-                    $('#generated-image').css('opacity', 0.5);
-                    $('#loading-spinner').show();
+                    imageDisplayArea.children('img').css('opacity', 0.5); // Намаляваме наситеността на съществуващите картинки
+                    loadingSpinner.css({ // Позиционираме спинъра в горната част, централно
+                        top: '20px', // Малко отстояние от горния ръб
+                        left: '50%',
+                        transform: 'translateX(-50%)', // Само хоризонтално центриране
+                        // 'translateY(-50%)' се премахва, за да не се центрира вертикално спрямо цялата височина
+                        position: 'absolute' // Гарантираме, че е абсолютно позициониран
+                    }).show();
                     $('#go-button').prop('disabled', true); // Деактивирайте бутона по време на заявка
                     $('#rand-button').prop('disabled', true);
                 },
@@ -158,45 +167,51 @@ function genrateImage() {
                     // }
 
                     if (response.success && response.imageUrls && response.imageUrls.length > 0) {
-                        const imageDisplayArea = $('#image-display-area');
-                        imageDisplayArea.empty(); // Изчистваме предишни изображения (без спинъра, ако е вътре)
+                        imageDisplayArea.children().not(loadingSpinner).remove(); // Изчистваме предишното съдържание, но запазваме спинъра
 
                         response.imageUrls.forEach(function(url, index) {
                         // Създаваме нов img елемент за всяко изображение
                             const imgElement = $('<img>')
                                 .attr('src', url)
                                 .addClass('img-fluid rounded mb-2') // Добавяме класове за стилизация, mb-2 за малко разстояние
-                                .attr('alt', 'Генерирано изображение ' + (index + 1));
+                                .attr('alt', 'Генерирано изображение ' + (index + 1))
+                                .css('opacity', 1); // Гарантираме пълна наситеност
                             imageDisplayArea.append(imgElement);
                         });
-                    // Уверете се, че спинърът е скрит и основният контейнер е видим с правилната прозрачност
-                    // $('#generated-image').css('opacity', 1); // Това може да не е нужно, ако imageDisplayArea управлява видимостта
                     } else if (response.success && (!response.imageUrls || response.imageUrls.length === 0)) {
-                    // Случай, в който заявката е успешна, но няма върнати изображения
+                        imageDisplayArea.children().not(loadingSpinner).remove(); // Изчистваме, запазваме спинъра
                         console.warn('Image generation successful but no images returned.');
                         alert('Генерирането беше успешно, но не бяха върнати изображения.');
-                        // Може да покажете placeholder или съобщение в #image-display-area
+                        imageDisplayArea.append($('<p class="text-light">Генерирането беше успешно, но не бяха върнати изображения.</p>').css('opacity',1));
                     } else {
+                        imageDisplayArea.children().not(loadingSpinner).remove(); // Изчистваме, запазваме спинъра
                         console.error('Image generation failed:', response.message);
                         alert(response.message || 'Грешка при генериране на изображението.');
                         // Връщане на placeholder изображение или показване на съобщение за грешка
-                        const imageDisplayArea = $('#image-display-area');
-                        imageDisplayArea.empty(); // Изчистваме
                         const errorImage = $('<img>')
                             .attr('src', 'https://picsum.photos/800/600?grayscale&blur=2')
                             .addClass('img-fluid rounded')
-                            .attr('alt', 'Грешка при генериране');
+                            .attr('alt', 'Грешка при генериране')
+                            .css('opacity', 1); // Гарантираме пълна наситеност
                         imageDisplayArea.append(errorImage);
                     }
                 },
                 error: function (xhr, status, error) {
+                    imageDisplayArea.children().not(loadingSpinner).remove(); // Изчистваме, запазваме спинъра
                     console.error('Error generating image via AJAX:', status, error);
                     alert('Възникна грешка при комуникация със сървъра. Моля, опитайте отново.');
-                    $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
+                    const errorPlaceholder = $('<img>')
+                        .attr('src', 'https://picsum.photos/800/600?grayscale&blur=2')
+                        .addClass('img-fluid rounded')
+                        .attr('alt', 'Грешка при генериране на изображение - сървърна грешка')
+                        .css('opacity', 1); // Гарантираме пълна наситеност
+                    imageDisplayArea.append(errorPlaceholder);
                 },
                 complete: function () {
                     // По желание: премахнете индикатора за зареждане
-                    $('#loading-spinner').hide();
+                    loadingSpinner.hide();
+                    // Всички видими изображения вече трябва да са с opacity: 1 от success/error блоковете
+                    // imageDisplayArea.children('img').css('opacity', 1); // Като допълнителна мярка, ако е нужно
                     $('#go-button').prop('disabled', false); // Активирайте бутона отново
                     $('#rand-button').prop('disabled', false);
                 }
