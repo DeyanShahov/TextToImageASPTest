@@ -207,9 +207,10 @@ namespace TextToImageASPTest.Controllers
             var dispacher = new Dispatcher();
             try
             {
-                await dispacher.DispatchAsync(promptText, data.GetSelectedStyleNames(), new List<string>());
+                var result = await dispacher.DispatchAsync(promptText, data.GetSelectedStyleNames(), new List<string>());
                 _logger.LogInformation($"Image generation request sent for prompt: {promptText}");
-                return Json(new { success = true });
+                return StatusCode(201, new { success = true, message = result });
+
             }
             catch (Exception ex)
             {

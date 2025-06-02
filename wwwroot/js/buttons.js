@@ -166,6 +166,8 @@ function genrateImage() {
                     //     $('#generated-image').attr('src', 'https://picsum.photos/800/600?grayscale&blur=2').css('opacity', 1);
                     // }
 
+                    alert(response.message); // Показваме съобщението от сървъра
+
                     if (response.success && response.imageUrls && response.imageUrls.length > 0) {
                         imageDisplayArea.children().not(loadingSpinner).remove(); // Изчистваме предишното съдържание, но запазваме спинъра
 

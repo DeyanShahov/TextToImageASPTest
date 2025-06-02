@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Http;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace TextToImageASPTest.Services
 {
@@ -23,7 +19,7 @@ namespace TextToImageASPTest.Services
             httpClient.DefaultRequestHeaders.Add("Authorization", ApiKey);
         }
 
-        public async Task DispatchAsync(string promptText, List<string> style1settings, List<string> style2settings)
+        public async Task<string> DispatchAsync(string promptText, List<string> style1settings, List<string> style2settings)
         {
             // Prepare the request payload based on Node.js server expectations
             var requestData = new
@@ -45,7 +41,7 @@ namespace TextToImageASPTest.Services
             catch (JsonException e)
             {
                 Debug.WriteLine($"JSON serialization error: {e.Message}");
-                return; // Exit if payload cannot be created
+                return e.Message; // Exit if payload cannot be created
             }
 
             HttpContent content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
@@ -65,21 +61,26 @@ namespace TextToImageASPTest.Services
                     Debug.WriteLine("Request successful. Response from Node.js server:");
                     Debug.WriteLine($"Status Code: {response.StatusCode}");
                     Debug.WriteLine($"Response Body: {responseBody}");
+                    return responseBody;
                 }
                 else
                 {
                     Debug.WriteLine($"Request failed.");
                     Debug.WriteLine($"Status Code: {response.StatusCode}");
                     Debug.WriteLine($"Response Body: {responseBody}");
+                    return responseBody;
+
                 }
             }
             catch (HttpRequestException e)
             {
                 Debug.WriteLine($"Request error: {e.Message}{(e.InnerException != null ? $", Inner Exception: {e.InnerException.Message}" : "")}");
+                return e.Message;
             }
             catch (Exception e) // Catch-all for other unexpected errors
             {
                 Debug.WriteLine($"An unexpected error occurred: {e.Message}");
+                return e.Message;
             }
         }
     }
