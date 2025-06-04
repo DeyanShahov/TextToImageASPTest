@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using TextToImageASPTest.Models;
 using TextToImageASPTest.Services;
@@ -171,8 +172,8 @@ namespace TextToImageASPTest.Controllers
 
 
         [HttpPost("Home/GenerateImageAsync")]
-        // [ValidateAntiForgeryToken] // Премахнете или добавете токен в JS, ако е необходимо
-        public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model)
+        // [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model, CancellationToken cancellationToken)
         {
 
             bool isRandom = model.IsRandom;
@@ -205,21 +206,79 @@ namespace TextToImageASPTest.Controllers
             AdvancedPromptSettings.NegativePrompt = model.NegativePromptAdditions ?? string.Empty;
 
             var dispacher = new Dispatcher();
+            string rawResultFromDispatcher;
             try
             {
-                var result = await dispacher.DispatchAsync(promptText, data.GetSelectedStyleNames(), new List<string>());
-                _logger.LogInformation($"Image generation request sent for prompt: {promptText}");
-                return StatusCode(201, new { success = true, message = result });
-
+                // Предаваме cancellationToken от HTTP заявката
+                rawResultFromDispatcher = await dispacher.DispatchAsync(promptText, data.GetSelectedStyleNames(), new List<string>(), cancellationToken);
+                _logger.LogInformation($"Dispatcher returned for prompt '{promptText}': {rawResultFromDispatcher.Substring(0, Math.Min(rawResultFromDispatcher.Length, 200))}...");
             }
-            catch (Exception ex)
+            catch (Exception ex) // Този catch е за критични грешки в самия DispatchAsync, преди да върне стринг
             {
-                _logger.LogError(ex, "Error during image generation request for prompt: {Prompt}", promptText);
-                return StatusCode(500, new { success = false, message = $"Възникна грешка при изпращане на заявката: {ex.Message}" });
+                _logger.LogError(ex, "Critical error calling DispatchAsync for prompt: {Prompt}", promptText);
+                return StatusCode(500, new { success = false, message = $"Критична грешка при комуникация с услугата: {ex.Message}" });
             }
 
-            // --- Начало на промените за таймаут ---
-            CancellationTokenSource cts = new CancellationTokenSource();
+            try
+            {
+                // Опит за парсване на резултата от диспечера като JSON
+                using (JsonDocument doc = JsonDocument.Parse(rawResultFromDispatcher))
+                {
+                    JsonElement root = doc.RootElement;
+                    if (root.TryGetProperty("status", out JsonElement statusElement))
+                    {
+                        string status = statusElement.GetString();
+                        if (status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (root.TryGetProperty("image_data_base64", out JsonElement imageBase64Element) && imageBase64Element.ValueKind == JsonValueKind.String &&
+                                root.TryGetProperty("image_type", out JsonElement imageTypeElement) && imageTypeElement.ValueKind == JsonValueKind.String)
+                            {
+                                string base64Image = imageBase64Element.GetString();
+                                string imageType = imageTypeElement.GetString();
+                                string imageUrl = $"data:image/{imageType};base64,{base64Image}";
+                                _logger.LogInformation("Image generation successful for prompt: {Prompt}", promptText);
+                                return Json(new { success = true, imageUrls = new List<string> { imageUrl } });
+                            }
+                            else
+                            {
+                                _logger.LogError("Completed job result from dispatcher is missing or has invalid image_data_base64/image_type. Payload: {Payload}", rawResultFromDispatcher);
+                                return Json(new { success = false, message = "Полученият резултат (завършен) е непълен или невалиден." });
+                            }
+                        }
+                        else if (status.Equals("failed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string failureMessage = "Грешка при генериране на изображението от сървъра.";
+                            if (root.TryGetProperty("message", out JsonElement msgElement) && msgElement.ValueKind == JsonValueKind.String)
+                            {
+                                failureMessage = msgElement.GetString();
+                            }
+                            _logger.LogWarning("Image generation failed by the service. Status: failed. Payload: {Payload}", rawResultFromDispatcher);
+                            return Json(new { success = false, message = failureMessage });
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Image generation returned JSON with unknown status: {Status}. Payload: {Payload}", status, rawResultFromDispatcher);
+                            return Json(new { success = false, message = $"Получен е отговор с неизвестен статус '{status}'." });
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Image generation returned JSON without a 'status' property. Payload: {Payload}", rawResultFromDispatcher);
+                        return Json(new { success = false, message = "Получен е невалиден формат на отговор от услугата." });
+                    }
+                }
+            }
+            catch (JsonException) // Ако rawResultFromDispatcher не е валиден JSON (това е очакваният път за грешки от Dispatcher)
+            {
+                _logger.LogWarning("Result from DispatchAsync was not JSON, treating as error message: {Result}", rawResultFromDispatcher);
+                return Json(new { success = false, message = rawResultFromDispatcher });
+            }
+            catch (Exception ex) // Други неочаквани грешки при обработката
+            {
+                _logger.LogError(ex, "Error processing dispatcher result for prompt: {Prompt}. Raw dispatcher result: {RawResult}", promptText, rawResultFromDispatcher);
+                return StatusCode(500, new { success = false, message = $"Възникна сървърна грешка при обработка на резултата: {ex.Message}" });
+            }
+            //CancellationTokenSource cts = new CancellationTokenSource();
             // try
             // {
             //     // Задаваме таймаут от 60 секунди
