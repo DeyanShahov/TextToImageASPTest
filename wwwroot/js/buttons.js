@@ -6,13 +6,13 @@ function newButtonsFunctionality(buttonType) {
 
     //Функция за извличане на избраните ID-та от sessionStorage
     function getSelectedIds() {
-        const storedValue = sessionStorage.getItem(storageKey);
+        const storedValue = localStorage.getItem(storageKey);
         return storedValue ? JSON.parse(storedValue) : [];
     }
 
     //Функция за запазване на избраните ID-та в sessionStorage
     function saveSelectedIds(ids) {
-        sessionStorage.setItem(storageKey, JSON.stringify(ids));
+        localStorage.setItem(storageKey, JSON.stringify(ids));
     }
 
     function localSetButtonToPrimary($button, currentSelectedIds, btnId) {
@@ -32,54 +32,17 @@ function newButtonsFunctionality(buttonType) {
 
     function localSetImageStyle($button, currentSelectedIds, btnId) {
         var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
-
-        console.log();
-        // Изпращане на AJAX заявка към сървъра за запис на стила
-        $.ajax({
-            url: '/Home/AddStyleSelection',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ buttonFullName: buttonFullName }),
-            success: function(response) {
-                if (response.success) {
-                    console.log('Стилът е успешно записан на сървъра:', response.message);
-                    localSetButtonToActive($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
-                    saveSelectedIds(currentSelectedIds); // Запазва в sessionStorage САМО при успех
-                } else {
-                    console.warn('Неуспешен запис на стила на сървъра:', response.message);
-                    // При неуспех не променяме sessionStorage, за да остане консистентен с последното успешно състояние
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Грешка при AJAX заявката за запис на стил:', status, error, xhr.responseText);
-            }
-        });
+        console.log('Добавяне на стил (клиентска страна):', buttonFullName);
+        localSetButtonToActive($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
+        saveSelectedIds(currentSelectedIds); // Запазва в localStorage
     }
 
     function localRemoveImageStyle($button, currentSelectedIds, btnId) {
-        var buttonFullName = $button.data('extra-param'); // Пълното име на бутона
-
-        // Изпращане на AJAX заявка към сървъра за изтриване на стила
-        $.ajax({
-            url: '/Home/RemoveStyleSelection',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ buttonFullName: buttonFullName }),
-            success: function (response) {
-                if (response.success) {
-                    console.log('Стилът е успешно изтрит от сървъра:', response.message);
-                    localSetButtonToPrimary($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
-                    saveSelectedIds(currentSelectedIds); // Запазва в sessionStorage САМО при успех
-                } else {
-                    console.warn('Неуспешно изтриване на стила от сървъра:', response.message);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Грешка при AJAX заявката за изтриване на стил:', status, error, xhr.responseText);
-            }
-        });
+        var buttonFullName = $button.data('extra-param'); // Пълното име на бутона      
+        console.log('Премахване на стил (клиентска страна):', buttonFullName);
+        localSetButtonToPrimary($button, currentSelectedIds, btnId); // Обновява UI и масива currentSelectedIds
+        saveSelectedIds(currentSelectedIds); // Запазва в localStorage
     }
-
     // Обработка на клик върху бутон - използваме event delegation за по-голяма гъвкавост
     $(document).on('click', buttonSelector, function() {
         var $button = $(this);
@@ -117,6 +80,27 @@ function genrateImage() {
                 return;
             }
 
+            let allSelectedStyleNames = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.endsWith('-selections')) {
+                    const storedValue = localStorage.getItem(key);
+                    const selectedIdsInGroup = storedValue ? JSON.parse(storedValue) : [];
+                    selectedIdsInGroup.forEach(function(id) {
+                        // Трябва да намерим бутона по ID, за да вземем data-extra-param (пълното име на стила)
+                        // Префиксът на ID-то на бутона е buttonType + '-btn-'
+                        // Ключът в localStorage е buttonType + '-selections'
+                        const buttonTypeFromKey = key.replace('-selections', '');
+                        const buttonFullId = '#' + buttonTypeFromKey + '-btn-' + id;
+                        const styleName = $(buttonFullId).data('extra-param');
+                        if (styleName) {
+                            allSelectedStyleNames.push(styleName);
+                        }
+                    });
+                }
+            }   
+
+
             const advancedSettings = {
                 useCfgScale: $('#enable-cfg-scale').is(':checked'),
                 cfgScaleValue: $('#enable-cfg-scale').is(':checked') ? parseFloat($('#cfg-scale-slider').val()) : null,
@@ -133,6 +117,7 @@ function genrateImage() {
             const payload = JSON.stringify({ 
                 isRandom: isRandomRequest, 
                 prompt: promptText,
+                selectedStyles: allSelectedStyleNames,
                 ...advancedSettings // Добавяме събраните допълнителни настройки
             });
 
@@ -237,46 +222,33 @@ function clearCurrentStyle() {
             return; // Потребителят е отказал
         }
 
-        $.ajax({
-            url: '/Home/ClearStyleSelection', // Път до вашия екшън в контролера
-            type: 'POST',
-            // headers: {
-            //     // Уверете се, че имате @Html.AntiForgeryToken() във вашата View (напр. Index.cshtml или _Layout.cshtml)
-            //     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-            // },
-            success: function(response) {
-                if (response.success) {
-                    console.log('Стиловете са успешно изчистени на сървъра:', response.message);
+        console.log('Изчистване на всички стилове (клиентска страна).');
 
-                    // 1. Изчистване на sessionStorage
-                    for (let i = 0; i < sessionStorage.length; i++) {
-                        const key = sessionStorage.key(i);
-                        if (key && key.endsWith('-selections')) {
-                            sessionStorage.removeItem(key);
-                            console.log('Изчистен sessionStorage ключ:', key);
-                        }
-                    }
+        // 1. Изчистване на localStorage за ключове, завършващи на '-selections'
+        // Трябва да се внимава да не се изтрият други важни неща от localStorage.
+        // По-безопасен подход е да се знае точно кои ключове да се изтрият.
+        // Засега приемаме, че всички ключове, завършващи на '-selections', са за стилове.
+        let keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.endsWith('-selections')) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('Изчистен localStorage ключ:', key);
+        });
 
-                    // 2. Нулиране на UI на бутоните за стилове
-                    $('[data-btn-type]').each(function() {
-                        var $button = $(this);
-                        if ($button.hasClass('active') || $button.hasClass('btn-success')) {
-                            $button.removeClass('active btn-success').addClass('btn-primary');
-                        }
-                    });
-
-                    alert('Всички избрани стилове бяха успешно изчистени.');
-
-                } else {
-                    console.warn('Неуспешно изчистване на стиловете от сървъра:', response.message);
-                    alert('Грешка при изчистване на стиловете: ' + (response.message || 'Неизвестна сървърна грешка.'));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Грешка при AJAX заявката за изчистване на стилове:', status, error, xhr.responseText);
-                alert('Възникна грешка при комуникация със сървъра за изчистване на стиловете.');
+        // 2. Нулиране на UI на бутоните за стилове
+        $('[data-btn-type]').each(function() {
+            var $button = $(this);
+            if ($button.hasClass('active') || $button.hasClass('btn-success')) {
+                $button.removeClass('active btn-success').addClass('btn-primary');
             }
         });
+
+        alert('Всички избрани стилове бяха успешно изчистени от браузъра.');
     });
 }
 
@@ -317,22 +289,22 @@ function initializeAdvancedSettingsToggle() {
     const enableSamplerCheckbox = $('#enable-scheduler');
 
     // Ключове за sessionStorage
-    const KEY_ENABLE_CFG = 'advancedSettings_enableCfgScale';
-    const KEY_CFG_VALUE = 'advancedSettings_cfgScaleValue';
-    const KEY_BATCH_VALUE = 'advancedSettings_batchSizeValue'; // Добавен ключ за batch size
-    const KEY_ENABLE_SAMPLER = 'advancedSettings_enableSampler';
-    const KEY_SAMPLER_VALUE = 'advancedSettings_samplerValue';
-    const KEY_POSITIVE_PROMPT = 'advancedSettings_positivePrompt';
-    const KEY_NEGATIVE_PROMPT = 'advancedSettings_negativePrompt';
+    const KEY_ENABLE_CFG = 'advancedSettings_localStorage_enableCfgScale';
+    const KEY_CFG_VALUE = 'advancedSettings_localStorage_cfgScaleValue';
+    const KEY_BATCH_VALUE = 'advancedSettings_localStorage_batchSizeValue'; 
+    const KEY_ENABLE_SAMPLER = 'advancedSettings_localStorage_enableSampler';
+    const KEY_SAMPLER_VALUE = 'advancedSettings_localStorage_samplerValue';
+    const KEY_POSITIVE_PROMPT = 'advancedSettings_localStorage_positivePrompt';
+    const KEY_NEGATIVE_PROMPT = 'advancedSettings_localStorage_negativePrompt';
 
     // Функция за зареждане на настройките от sessionStorage
     function loadSettings() {
         // CFG Scale
-        const storedEnableCfg = sessionStorage.getItem(KEY_ENABLE_CFG);
+        const storedEnableCfg = localStorage.getItem(KEY_ENABLE_CFG);
         if (storedEnableCfg !== null) {
             enableCfgScaleCheckbox.prop('checked', JSON.parse(storedEnableCfg)).trigger('change'); // trigger change за да се обнови disabled състоянието
         }
-        const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+        const storedCfgValue = localStorage.getItem(KEY_CFG_VALUE);
         if (storedCfgValue !== null && enableCfgScaleCheckbox.is(':checked')) {
             cfgScaleSlider.val(storedCfgValue).trigger('input'); // trigger input за да се обнови дисплея
         } else if (!enableCfgScaleCheckbox.is(':checked')) {
@@ -341,22 +313,22 @@ function initializeAdvancedSettingsToggle() {
         }
 
         // BATCH Scale
-        const storedBatchValue = sessionStorage.getItem(KEY_BATCH_VALUE);
+        const storedBatchValue = localStorage.getItem(KEY_BATCH_VALUE);
         if (storedBatchValue !== null) {
             batchSizeSlider.val(storedBatchValue).trigger('input'); // trigger input за да се обнови дисплея
         } else {
             batchSizeSlider.val(1); // Връщане на default стойност
             batchSizeValueDisplay.text(1); // Актуализиране на дисплея
-            sessionStorage.setItem(KEY_BATCH_VALUE, '1'); // Запазване на default стойността в sessionStorage
+            localStorage.setItem(KEY_BATCH_VALUE, '1'); // Запазване на default стойността в localStorage
         }
 
 
         // Sampler
-        const storedEnableSampler = sessionStorage.getItem(KEY_ENABLE_SAMPLER);
+        const storedEnableSampler = localStorage.getItem(KEY_ENABLE_SAMPLER);
         if (storedEnableSampler !== null) {
             enableSamplerCheckbox.prop('checked', JSON.parse(storedEnableSampler)).trigger('change');
         }
-        const storedSamplerValue = sessionStorage.getItem(KEY_SAMPLER_VALUE);
+        const storedSamplerValue = localStorage.getItem(KEY_SAMPLER_VALUE);
         if (storedSamplerValue !== null && enableSamplerCheckbox.is(':checked')) {
             samplerRadios.filter(`[value="${storedSamplerValue}"]`).prop('checked', true);
         } else if (!enableSamplerCheckbox.is(':checked')) {
@@ -364,11 +336,11 @@ function initializeAdvancedSettingsToggle() {
         }
 
         // Text Prompts
-        const storedPositivePrompt = sessionStorage.getItem(KEY_POSITIVE_PROMPT);
+        const storedPositivePrompt = localStorage.getItem(KEY_POSITIVE_PROMPT);
         if (storedPositivePrompt !== null) {
             positivePromptTextarea.val(storedPositivePrompt);
         }
-        const storedNegativePrompt = sessionStorage.getItem(KEY_NEGATIVE_PROMPT);
+        const storedNegativePrompt = localStorage.getItem(KEY_NEGATIVE_PROMPT);
         if (storedNegativePrompt !== null) {
             negativePromptTextarea.val(storedNegativePrompt);
         }
@@ -383,12 +355,12 @@ function initializeAdvancedSettingsToggle() {
         enableCfgScaleCheckbox.on('change', function() {
             const isChecked = $(this).is(':checked');
             cfgScaleSlider.prop('disabled', !isChecked);
-            sessionStorage.setItem(KEY_ENABLE_CFG, isChecked);
+            localStorage.setItem(KEY_ENABLE_CFG, isChecked);
             if (!isChecked) { // Ако се деактивира, може да искаме да нулираме стойността или да я запазим
-                // sessionStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
+                // localStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
             } else {
                 // Ако се активира и има запазена стойност, приложи я
-                const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+                const storedCfgValue = localStorage.getItem(KEY_CFG_VALUE);
                 if (storedCfgValue) cfgScaleSlider.val(storedCfgValue).trigger('input');
             }
         });
@@ -396,7 +368,7 @@ function initializeAdvancedSettingsToggle() {
         cfgScaleSlider.on('input', function() {
             cfgScaleValueDisplay.text($(this).val());
             if (enableCfgScaleCheckbox.is(':checked')) { // Запазваме само ако е активен
-                sessionStorage.setItem(KEY_CFG_VALUE, $(this).val());
+                localStorage.setItem(KEY_CFG_VALUE, $(this).val());
             }
         });
     }
@@ -405,22 +377,22 @@ function initializeAdvancedSettingsToggle() {
     if (batchSizeSlider.length && batchSizeValueDisplay.length) {
         //const isChecked = $(this).is(':checked');
         //cfgScaleSlider.prop('disabled', !isChecked);
-        //sessionStorage.setItem(KEY_ENABLE_CFG, isChecked);
+        //localStorage.setItem(KEY_ENABLE_CFG, isChecked);
         //if (!isChecked) { // Ако се деактивира, може да искаме да нулираме стойността или да я запазим
-        //   // sessionStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
+        //   // localStorage.removeItem(KEY_CFG_VALUE); // По избор: изтриване на стойността
         //} else {
         //   // Ако се активира и има запазена стойност, приложи я
-        //   const storedCfgValue = sessionStorage.getItem(KEY_CFG_VALUE);
+        //   const storedCfgValue = localStorage.getItem(KEY_CFG_VALUE);
         //   if (storedCfgValue) cfgScaleSlider.val(storedCfgValue).trigger('input');
         //}
 
-        //const storedBatchValue = sessionStorage.getItem(KEY_BATCH_VALUE);
+        //const storedBatchValue = localStorage.getItem(KEY_BATCH_VALUE);
         //if (storedBatchValue) batchSizeSlider.val(storedBatchValue).trigger('input');
 
 
         batchSizeSlider.on('input', function () {
             batchSizeValueDisplay.text($(this).val());
-            sessionStorage.setItem(KEY_BATCH_VALUE, $(this).val());
+            localStorage.setItem(KEY_BATCH_VALUE, $(this).val());
         });
     }
 
@@ -429,24 +401,24 @@ function initializeAdvancedSettingsToggle() {
         enableSamplerCheckbox.on('change', function() {
             const isChecked = $(this).is(':checked');
             samplerRadios.prop('disabled', !isChecked);
-            sessionStorage.setItem(KEY_ENABLE_SAMPLER, isChecked);
+            localStorage.setItem(KEY_ENABLE_SAMPLER, isChecked);
             if (!isChecked) {
-                // sessionStorage.removeItem(KEY_SAMPLER_VALUE); // По избор
+                // localStorage.removeItem(KEY_SAMPLER_VALUE); // По избор
             } else {
-                const storedSamplerValue = sessionStorage.getItem(KEY_SAMPLER_VALUE);
+                const storedSamplerValue = localStorage.getItem(KEY_SAMPLER_VALUE);
                 if (storedSamplerValue) samplerRadios.filter(`[value="${storedSamplerValue}"]`).prop('checked', true);
             }
         });
         samplerRadios.on('change', function() {
             if (enableSamplerCheckbox.is(':checked')) { // Запазваме само ако е активен
-                sessionStorage.setItem(KEY_SAMPLER_VALUE, $(this).val());
+                localStorage.setItem(KEY_SAMPLER_VALUE, $(this).val());
             }
         });
     }
 
     // Управление на текстовите полета
-    positivePromptTextarea.on('input', function() { sessionStorage.setItem(KEY_POSITIVE_PROMPT, $(this).val()); });
-    negativePromptTextarea.on('input', function() { sessionStorage.setItem(KEY_NEGATIVE_PROMPT, $(this).val()); });
+    positivePromptTextarea.on('input', function() { localStorage.setItem(KEY_POSITIVE_PROMPT, $(this).val()); });
+    negativePromptTextarea.on('input', function() { localStorage.setItem(KEY_NEGATIVE_PROMPT, $(this).val()); });
 
     loadSettings(); // Зареждане на запазените настройки при инициализация
 }
