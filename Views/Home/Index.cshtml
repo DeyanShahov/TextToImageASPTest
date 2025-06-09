@@ -90,6 +90,9 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Бутон за сваляне на изображението -->
+                            <button class="btn btn-secondary btn-sm mt-2" id="download-image-button" style="display:none;">Свали изображението</button>
+
                         </div>
                     </div>
                               
@@ -102,6 +105,58 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // --- Логика за показване на последно запазено изображение ---
+            const lastGeneratedDataUrl = localStorage.getItem('lastGeneratedImageUrl');
+            if (lastGeneratedDataUrl) {
+                const $imageDisplayArea = $('#image-display-area');
+                // Намираме спинъра вътре в image-display-area, ако съществува там
+                const $spinner = $imageDisplayArea.find('#loading-spinner'); 
+                $imageDisplayArea.children().not($spinner).remove(); // Изчистваме предишни изображения, запазваме спинъра
+
+                // Конвертираме запазения data:URL към Blob URL за показване
+                const parts = lastGeneratedDataUrl.split(',');
+                if (parts.length === 2 && parts[0].startsWith('data:image/')) {
+                    const base64Data = parts[1];
+                    const contentTypeMatch = parts[0].match(/^data:(image\/[a-z]+);base64$/);
+                    const contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/png';
+
+                    // Използваме същата функция base64ToBlob от buttons.js
+                    // Уверете се, че base64ToBlob е достъпна в този скоуп или я дефинирайте отново тук,
+                    // или я направете глобална (не е най-добрата практика, но за целта на примера)
+                    // За простота, ще приемем, че е достъпна (напр. дефинирана преди $(document).ready в buttons.js)
+                    if (typeof base64ToBlob === 'function') {
+                        const blob = base64ToBlob(base64Data, contentType);
+                        const blobUrl = URL.createObjectURL(blob);
+
+                        const imgElement = $('<img>')
+                            .attr('src', blobUrl)
+                            .addClass('img-fluid rounded mb-2')
+                            .attr('alt', 'Последно генерирано изображение')
+                            .css('opacity', 1);
+                        $imageDisplayArea.append(imgElement);
+
+                        // Показваме бутона за сваляне, ако има запазено изображение
+                        // Бутонът за сваляне ще използва оригиналния data:URL за по-добра съвместимост
+                        const $downloadButton = $('#download-image-button');
+                        if ($downloadButton.length) {
+                            $downloadButton.show().off('click').on('click', function() {
+                                const link = document.createElement('a');
+                                link.href = lastGeneratedDataUrl; // Използваме data:URL за сваляне
+                                link.download = 'generated_image.png';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                        }
+                    } else {
+                        console.error("base64ToBlob function is not defined. Cannot display persisted image as blob.");
+                        // Fallback: покажи директно data:URL, ако функцията липсва
+                        $imageDisplayArea.append($('<img>').attr('src', lastGeneratedDataUrl).addClass('img-fluid rounded mb-2').attr('alt', 'Последно генерирано изображение').css('opacity', 1));
+                    }
+                }
+            }
+            // --- Край на логиката за показване на последно запазено изображение ---
+
             const promptInput = $('#text-prompt');
             const promptStorageKey = 'userTextPrompt';
 

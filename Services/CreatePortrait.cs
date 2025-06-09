@@ -2,7 +2,7 @@
 {
     public class CreatePortrait
     {
-        public static Random Shared { get; }
+        private static Random random = new Random();
 
         // Данните от JSON файла, вградени директно като речник
         private static readonly Dictionary<string, List<string>> portraitData = new Dictionary<string, List<string>>
@@ -52,7 +52,7 @@
             portraitTraits.Add($"with {GetRandomItem(portraitData["face_expression_list"])} expression");
 
             // Ако полът е мъж, добавяме брада (50% шанс)
-            if (gender == "Man" && Shared.Next(2) == 0)
+            if (gender == "Man" && random.Next(2) == 0)
             {
                 portraitTraits.Add($"with {GetRandomItem(portraitData["beard_list"])}");
             }
@@ -82,7 +82,7 @@
                 // Обработка на случай с празен списък, ако е възможно
                 return string.Empty; // Или хвърляне на изключение
             }
-            int index = Shared.Next(count);
+            int index = random.Next(count);
             return list[index];
         }
     }
