@@ -8,6 +8,7 @@ const IMAGE_DISPLAY_AREA_ID = '#image-display-area';
 const GO_BUTTON_ID = '#go-button';
 const RAND_BUTTON_ID = '#rand-button';
 const DOWNLOAD_BUTTON_ID = '#download-image-button'; // Вече го имахме
+const CLEAR_PENDING_JOB_BUTTON_ID = '#clear-pending-job-button'; // Нов бутон
 
 function disableSubmitButtons(message = "Обработка...") {
     $(GO_BUTTON_ID).prop('disabled', true).text(message);
@@ -45,10 +46,14 @@ function showSpinner() {
         transform: 'translateX(-50%)',
         position: 'absolute'
     }).show();
+
+    $(IMAGE_DISPLAY_AREA_ID).find('img').css('opacity', 0.5); // Намаляваме opacity на съществуващите изображения
 }
 
 function hideSpinner() {
     $(SPINNER_ID).hide();
+    
+    $(IMAGE_DISPLAY_AREA_ID).find('img').css('opacity', 1); // Възстановяваме opacity на всички показани изображения
 }
 
 // Функция за конвертиране на base64 към Blob
@@ -396,6 +401,26 @@ function initializeImageGenerationAndUI() {
             }
         });
     });
+
+    // CLEAR PENDING JOB ID button functionality
+    $(CLEAR_PENDING_JOB_BUTTON_ID).on('click', function() {
+        const pendingJobId = localStorage.getItem(PENDING_JOB_ID_KEY); // Вземаме ID-то преди изчистване за съобщението
+
+        if (pendingJobId) {
+            if (confirm(`Сигурни ли сте, че искате да изчистите чакащата заявка с ID: ${pendingJobId}? Това действие не може да бъде отменено.`)) {
+                // clearPendingJobState ще премахне PENDING_JOB_ID_KEY от localStorage и ще нулира UI
+                clearPendingJobState();
+                console.log(`Manually cleared pending job ID: ${pendingJobId} and reset UI state.`);
+                alert(`Чакащата заявка с ID: ${pendingJobId} беше изчистена.`);
+            }
+        } else {
+            alert("Няма чакаща заявка за изчистване.");
+            // Дори и да няма ID в localStorage, извикваме clearPendingJobState,
+            // за да сме сигурни, че UI е в консистентно състояние (напр. ако currentPollingJobId е зададен без localStorage запис).
+            clearPendingJobState();
+        }
+    });
+
 
     // CLEAR button functionality
     $('#clear-button').on('click', function () {

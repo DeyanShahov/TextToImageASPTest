@@ -10,17 +10,25 @@
                     <h1 class="display-5 text-center mb-0">Генериране на изображение</h1>
                 </div>
                 <div class="card-body">                   
-                    <!-- Секция за въвеждане на текст и бутони -->
-                    <div class="row mb-3 align-items-center">
-                        <div class="col-md-8 col-12 mb-2 mb-md-0">
+                    <!-- Секция за въвеждане на текст -->
+                    <div class="row mb-3">
+                        <div class="col-12">
                             <input type="text" class="form-control form-control-lg" id="text-prompt" placeholder="моля въведете текст">
                         </div>
-                        <div class="col-md-4 col-12 d-flex justify-content-md-end justify-content-around">
+                    </div>
+                    
+                    <!-- Секция за бутони -->
+                    <div class="row mb-3">
+                        <div class="col-12 d-flex flex-wrap justify-content-start align-items-stretch">
                             @Html.AntiForgeryToken()
-                            <button class="btn btn-success btn-lg me-2" id="go-button">GO</button>
-                            <button class="btn btn-info btn-lg" id="rand-button">RAND</button>
-                            <button class="btn btn-info btn-lg" id="clear-button">CLEAR</button>
-                            <button class="btn btn-info btn-lg" id="settings-button">SET</button>
+                            <!-- Обвивка за GO бутона за контрол на ширината -->
+                            <div class="me-2 mb-2" style="flex-grow: 1; flex-basis: 0; min-width: 30%;"> <!-- Приблизително 1/3, позволява на другите да се разположат -->
+                                <button class="btn btn-success btn-lg w-100 h-100" id="go-button">GO</button>
+                            </div>
+                            <button class="btn btn-info btn-lg me-2 mb-2" id="rand-button">RAND</button>
+                            <button class="btn btn-warning btn-lg me-2 mb-2" id="clear-button">CLEAR</button> <!-- Променен цвят за по-добра видимост -->
+                            <button class="btn btn-danger btn-lg me-2 mb-2" id="clear-pending-job-button" title="Изчисти ID на чакаща заявка от localStorage">ИЗЧИСТИ ID</button>
+                            <button class="btn btn-secondary btn-lg mb-2" id="settings-button">SET</button> <!-- Променен цвят за по-добра видимост -->
                         </div>
                     </div>
                     
