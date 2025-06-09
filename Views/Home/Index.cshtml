@@ -1,4 +1,4 @@
-﻿@{
+﻿﻿@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -111,16 +111,29 @@
                 promptInput.val(savedPrompt);
             }
 
-            // Запазване на текста при всяка промяна
+            // Save text on every change
             promptInput.on('input', function() {
                 localStorage.setItem(promptStorageKey, $(this).val());
             });
 
-            // Извикване на новата универсална функция за бутоните от тип "painting"
-            genrateImage();
-            praska();
-            clearCurrentStyle();
-            initializeAdvancedSettingsToggle(); // Преименувахме функцията за яснота
+            // Initialize functionalities from buttons.js
+            initializeImageGenerationAndUI(); // Handles GO, RAND, and CLEAR button logic
+            loadAndPollPendingJob();          // Handles resuming jobs
+
+            // Initialize style selection buttons
+            // Collect all unique data-btn-type values and initialize for each.
+            let initializedButtonTypes = {};
+            $('[data-btn-type]').each(function() {
+                let type = $(this).data('btn-type');
+                if (type && !initializedButtonTypes[type]) {
+                    newButtonsFunctionality(type); // From buttons.js
+                    initializedButtonTypes[type] = true;
+                }
+            });
+
+            initializeAdvancedSettingsToggle(); // For the SETTINGS panel (from buttons.js)
+            
+            // praska(); // If the praska button and functionality are still needed (from buttons.js)
 
             // Почистване на стари съобщения (ако е необходимо)
             $('.alert.alert-success.alert-dismissible').remove(); // По-общо премахване на alert-и

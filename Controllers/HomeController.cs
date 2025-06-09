@@ -105,10 +105,12 @@ namespace TextToImageASPTest.Controllers
         // [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateImageAsync([FromBody] ImageRequestModel model, CancellationToken cancellationToken)
         {
-
             bool isRandom = model.IsRandom;
             string prompt = model.Prompt;
-
+            
+            // Ensure ILogger is available if not already
+            // private readonly ILogger<HomeController> _logger; (should be in class constructor)
+            
             string promptText = !isRandom ? (prompt ?? "").Trim() : CreatePortrait.GeneratePortraitPrompt();
 
             if (string.IsNullOrEmpty(promptText))
@@ -132,91 +134,109 @@ namespace TextToImageASPTest.Controllers
                 NegativePrompt = model.NegativePromptAdditions ?? string.Empty
             };
         
-            var dispacher = new Dispatcher();
-            object dispatcherResult; // Типът вече е object
+            var dispatcher = new Dispatcher(); // Consider injecting this via DI
             try
             {
-                // Предаваме cancellationToken от HTTP заявката
-                dispatcherResult = await dispacher.DispatchAsync(
+                // DispatchAsync is now split. We first send the job.
+                // SendJobAsync will return jobId or throw an exception.
+                string jobId = await dispatcher.SendJobAsync(
                     promptText,
                     model.SelectedStyles ?? new List<string>(),
-                    new List<string>(),
-                    advancedSettingsDto, // Подаваме инстанцията на DTO-то
+                    new List<string>(), // style2settings - assuming empty for now or add to model
+                    advancedSettingsDto,
                     cancellationToken
-                ); // Временно подаваме празен списък
-                //_logger.LogInformation($"Dispatcher returned for prompt '{promptText}': {rawResultFromDispatcher.Substring(0, Math.Min(rawResultFromDispatcher.Length, 50))}...");
+                );
+                _logger.LogInformation("Job submitted successfully with ID: {JobId} for prompt: {Prompt}", jobId, promptText);
+                return Json(new { success = true, status = "submitted", jobId = jobId, message = "Заявката е приета и се обработва." });
             }
-            catch (Exception ex) // Този catch е за критични грешки в самия DispatchAsync, преди да върне стринг
+            // Catch specific exceptions from SendJobAsync
+            catch (JsonException e) // Serialization error before sending
             {
-                _logger.LogError(ex, "Critical error calling DispatchAsync for prompt: {Prompt}", promptText);
-                return StatusCode(500, new { success = false, message = $"Критична грешка при комуникация с услугата: {ex.Message}" });
+                _logger.LogError(e, "JSON serialization error before sending job for prompt: {Prompt}", promptText);
+                return Json(new { success = false, status = "error", message = $"Грешка при подготовка на заявката: {e.Message}" });
+            }
+            catch (HttpRequestException e) // Network or HTTP error during send
+            {
+                _logger.LogError(e, "HTTP request error sending job for prompt: {Prompt}", promptText);
+                return Json(new { success = false, status = "error", message = $"Грешка при изпращане на заявката към сървъра: {e.Message}" });
+            }
+            catch (InvalidOperationException e) // Server accepted but response was malformed (e.g. missing jobId)
+            {
+                _logger.LogError(e, "Invalid operation error after sending job for prompt: {Prompt}", promptText);
+                return Json(new { success = false, status = "error", message = $"Грешка в отговора от сървъра след изпращане: {e.Message}" });
+            }
+            catch (OperationCanceledException e) // Task was cancelled
+            {
+                _logger.LogWarning(e, "Job submission cancelled for prompt: {Prompt}", promptText);
+                return Json(new { success = false, status = "cancelled", message = "Изпращането на заявката беше прекратено." });
+            }
+            catch (Exception ex) // Catch-all for other unexpected errors from SendJobAsync or DispatchAsync logic
+            {
+                _logger.LogError(ex, "Unexpected error during job submission/dispatch for prompt: {Prompt}", promptText);
+                return StatusCode(500, new { success = false, status = "error", message = $"Неочаквана сървърна грешка: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("Home/PollJobStatus")]
+        public async Task<IActionResult> PollJobStatus(string jobId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(jobId))
+            {
+                return BadRequest(new { success = false, status = "error", message = "Job ID е задължително." });
             }
 
-            if (dispatcherResult is JobResultDto completedJob) // Проверка дали резултатът е успешен DTO
+            var dispatcher = new Dispatcher(); // Consider injecting this
+            object result = await dispatcher.PollJobResultAsync(jobId, cancellationToken);
+
+            if (result is JobResultDto completedJob)
             {
-                // Вече имаме десериализираните данни, няма нужда от повторно парсване
                 string imageUrl = $"data:image/{completedJob.ImageType};base64,{completedJob.ImageDataBase64}";
-                //_logger.LogInformation("Image generation successful for prompt: {Prompt}", promptText);
-                return Json(new { success = true, imageUrls = new List<string> { imageUrl } });
-                //completedJob = null; // Освобождаваме паметта, ако е необходимо
-                //imageUrl = null; // Освобождаваме паметта, ако е необходимо
-                //dispatcherResult = null; // Освобождаваме паметта, ако е необходимо
+                _logger.LogInformation("PollJobStatus: Job {JobId} completed.", jobId);
+                return Json(new { success = true, status = "completed", imageUrls = new List<string> { imageUrl }, jobId = jobId });
             }
-            else if (dispatcherResult is string resultString) // Ако е стринг, обработваме го както преди
+            else if (result is string resultString)
             {
+                // Try to parse the string as JSON to get a status from backend
                 try
                 {
-                    // Опит за парсване на стринга като JSON (за случаи на грешка или друг статус)
                     using (JsonDocument doc = JsonDocument.Parse(resultString))
                     {
                         JsonElement root = doc.RootElement;
                         if (root.TryGetProperty("status", out JsonElement statusElement))
                         {
-                            string status = statusElement.GetString();
-                            // "completed" вече е обработен по-горе. Тук обработваме другите статуси.
-                            if (status.Equals("failed", StringComparison.OrdinalIgnoreCase) ||
-                                status.Equals("not_found", StringComparison.OrdinalIgnoreCase) /* и други неуспешни статуси */)
+                            string status = statusElement.GetString().ToLowerInvariant();
+                            string message = root.TryGetProperty("message", out var msgEl) && msgEl.ValueKind == JsonValueKind.String 
+                                             ? msgEl.GetString() 
+                                             : $"Статус от сървъра: {status}";
+
+                            if (status == "failed" || status == "not_found")
                             {
-                                string failureMessage = $"Грешка от сървъра (статус: {status}).";
-                                if (root.TryGetProperty("message", out JsonElement msgElement) && msgElement.ValueKind == JsonValueKind.String)
-                                {
-                                    failureMessage = msgElement.GetString();
-                                }
-                                _logger.LogWarning("Image generation service returned status: {Status}. Payload length: {PayloadLength}", status, resultString.Length);
-                                return Json(new { success = false, message = failureMessage });
+                                _logger.LogWarning("PollJobStatus: Job {JobId} failed with status {Status}, message: {Message}", jobId, status, message);
+                                return Json(new { success = false, status = status, message = message, jobId = jobId });
                             }
-                            else
+                            else if (status == "pending" || status == "processing")
                             {
-                                // pending, processing или друг неочакван статус
-                                _logger.LogWarning("Image generation returned JSON with unhandled status: {Status}. Payload length: {PayloadLength}", status, resultString.Length);
-                                return Json(new { success = false, message = $"Получен е отговор със статус '{status}', който не е финален." });
+                                _logger.LogInformation("PollJobStatus: Job {JobId} is {Status}.", jobId, status);
+                                return Json(new { success = true, status = status, jobId = jobId });
                             }
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Image generation returned JSON without a 'status' property. Payload length: {PayloadLength}", resultString.Length);
-                            return Json(new { success = false, message = "Получен е невалиден формат на отговор от услугата." });
+                            // else: unhandled status from backend JSON
+                             _logger.LogWarning("PollJobStatus: Job {JobId} returned unhandled JSON status: {Status}. Payload: {Payload}", jobId, status, resultString);
+                            return Json(new { success = false, status = "error", message = $"Непознат статус от сървъра: {status}", jobId = jobId });
                         }
                     }
                 }
-                catch (JsonException) // Ако resultString не е валиден JSON (това може да е съобщение за грешка от DispatchAsync)
-                {
-                    _logger.LogWarning("Result from DispatchAsync was not JSON, treating as error message: {Result}", resultString);
-                    return Json(new { success = false, message = resultString });
-                }
-                catch (Exception ex) // Други неочаквани грешки при обработката на стринга
-                {
-                    _logger.LogError(ex, "Error processing dispatcher string result for prompt: {Prompt}. Raw dispatcher result: {RawResult}", promptText, resultString);
-                    return StatusCode(500, new { success = false, message = $"Възникна сървърна грешка при обработка на резултата: {ex.Message}" });
-                }
+                catch (JsonException) { /* Not a JSON string, probably a direct error message from Dispatcher's PollJobResultAsync (e.g., timeout) */ }
+                
+                _logger.LogWarning("PollJobStatus for {JobId} returned string (likely polling error/timeout): {ResultString}", jobId, resultString);
+                return Json(new { success = false, status = "error", message = resultString, jobId = jobId }); // e.g. "Polling for job result timed out..."
             }
-            else // Неочакван тип резултат от Dispatcher
+            else // Unexpected type
             {
-                _logger.LogError("Dispatcher returned an unexpected result type: {ResultType}", dispatcherResult?.GetType().FullName ?? "null");
-                return StatusCode(500, new { success = false, message = "Получен е неочакван тип резултат от услугата за генериране." });
+                _logger.LogError("PollJobStatus for {JobId} received unexpected result type: {ResultType}", jobId, result?.GetType().Name);
+                return StatusCode(500, new { success = false, status = "error", message = "Неочакван отговор от сървъра при проверка на статус.", jobId = jobId });
             }
-           
         }
+
 
         [HttpGet]
         public string NovaFunctions()
@@ -226,8 +246,6 @@ namespace TextToImageASPTest.Controllers
         }
 
     }
-
-
     public class StyleSelectionModel
     {
         public string ButtonName { get; set; }

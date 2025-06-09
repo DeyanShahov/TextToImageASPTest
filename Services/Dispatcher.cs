@@ -39,7 +39,7 @@ namespace TextToImageASPTest.Services
         /// <exception cref="OperationCanceledException">Thrown if the operation is cancelled.</exception>
         /// <exception cref="Exception">Thrown for other unexpected errors.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the server response is missing the jobId.</exception>
-        private async Task<string> SendJobAsync(string promptText, List<string> style1settings, List<string> style2settings, AdvancedSettingsDto advancedSettings, CancellationToken cancellationToken)
+        public async Task<string> SendJobAsync(string promptText, List<string> style1settings, List<string> style2settings, AdvancedSettingsDto advancedSettings, CancellationToken cancellationToken)
         {
             // Конструиране на обекта 'parameters' въз основа на advancedSettings
             // Имената на полетата тук трябва да съответстват на това, което бекендът очаква.
@@ -144,7 +144,7 @@ namespace TextToImageASPTest.Services
         /// <exception cref="JsonException">Thrown if parsing the JSON response fails.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the jobResult response format is unexpected (e.g., missing status).</exception>
         /// <exception cref="Exception">Thrown for other unexpected errors during polling.</exception>
-        private async Task<object> PollJobResultAsync(string jobId, CancellationToken cancellationToken)
+        public async Task<object> PollJobResultAsync(string jobId, CancellationToken cancellationToken)
         {
             //Debug.WriteLine($"Starting polling for job ID: {jobId}");
 
@@ -160,7 +160,7 @@ namespace TextToImageASPTest.Services
                         linkedToken.ThrowIfCancellationRequested();
                         await Task.Delay(TimeSpan.FromSeconds(PollingIntervalSeconds), linkedToken);
                         string pollingUrl = $"{NginxResultJobUrl}?jobId={Uri.EscapeDataString(jobId)}";
-                       // Debug.WriteLine($"Polling {pollingUrl}");
+                        // Debug.WriteLine($"Polling {pollingUrl}");
 
                         using (HttpResponseMessage pollingResponse = await httpClient.GetAsync(pollingUrl, linkedToken))
                         {
@@ -257,42 +257,44 @@ namespace TextToImageASPTest.Services
         /// <param name="advancedSettings">DTO containing advanced parameters for the job.</param>
         /// <param name="cancellationToken">Cancellation token to cancel the entire dispatch and polling process.</param>
         /// <returns>A <see cref="JobResultDto"/> on successful completion, or a string containing an error message or other status JSON.</returns>
-        public async Task<object> DispatchAsync(string promptText, List<string> style1settings, List<string> style2settings, AdvancedSettingsDto advancedSettings, CancellationToken cancellationToken = default)
-        {          
-            string jobId = null;
+        // public async Task<object> DispatchAsync(string promptText, List<string> style1settings, List<string> style2settings, AdvancedSettingsDto advancedSettings, CancellationToken cancellationToken = default)
+        // {
+        //     string jobId = null;
 
-       
-            // --- Step 1: Send the initial job request ---
-            try          
-            {
-                jobId = await SendJobAsync(promptText, style1settings, style2settings, advancedSettings, cancellationToken);
-                //return jobId;
-            }
-            catch (Exception ex)
-            {
-                // Catch specific exceptions from SendJobAsync and format the error message
-                Debug.WriteLine($"Error sending job: {ex.Message}");
-                return $"Error sending job: {ex.Message}";
-            }
 
-            // --- Step 2: Poll for job result ---
-            // PollJobResultAsync handles its own timeout and cancellation linking
-            try
-            {
-                return await PollJobResultAsync(jobId, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // This exception is thrown by PollJobResultAsync on timeout or external cancellation
-                Debug.WriteLine($"Polling for job {jobId} was cancelled or timed out.");
-                return $"Job processing cancelled or timed out.";
-            }
-            catch (Exception e)
-            {
-                // Catch other exceptions from PollJobResultAsync and format the error message
-                Debug.WriteLine($"Error polling for job {jobId}: {e.Message}");
-                return $"Error polling for job result: {e.Message}";
-            }
-        }
+        //     // --- Step 1: Send the initial job request ---
+        //     try
+        //     {
+        //         jobId = await SendJobAsync(promptText, style1settings, style2settings, advancedSettings, cancellationToken);
+        //         //return jobId;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         // Catch specific exceptions from SendJobAsync and format the error message
+        //         Debug.WriteLine($"Error sending job: {ex.Message}");
+        //         return $"Error sending job: {ex.Message}";
+        //     }
+
+        //     // --- Step 2: Poll for job result ---
+        //     // PollJobResultAsync handles its own timeout and cancellation linking
+        //     try
+        //     {
+        //         return await PollJobResultAsync(jobId, cancellationToken);
+        //     }
+        //     catch (OperationCanceledException)
+        //     {
+        //         // This exception is thrown by PollJobResultAsync on timeout or external cancellation
+        //         Debug.WriteLine($"Polling for job {jobId} was cancelled or timed out.");
+        //         return $"Job processing cancelled or timed out.";
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         // Catch other exceptions from PollJobResultAsync and format the error message
+        //         Debug.WriteLine($"Error polling for job {jobId}: {e.Message}");
+        //         return $"Error polling for job result: {e.Message}";
+        //     }
+        // }
+
+
     }
 }
