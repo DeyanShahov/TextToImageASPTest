@@ -1,4 +1,4 @@
-﻿﻿@{
+﻿﻿﻿﻿@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -27,7 +27,7 @@
                             </div>
                             <button class="btn btn-info btn-lg me-2 mb-2" id="rand-button">RAND</button>
                             <button class="btn btn-warning btn-lg me-2 mb-2" id="clear-button">CLEAR</button> <!-- Променен цвят за по-добра видимост -->
-                            <button class="btn btn-danger btn-lg me-2 mb-2" id="clear-pending-job-button" title="Изчисти ID на чакаща заявка от localStorage">ИЗЧИСТИ ID</button>
+                            <button class="btn btn-info btn-lg me-2 mb-2" id="check-pending-job-button" title="Провери статуса на последната чакаща заявка">ПРОВЕРИ СТАТУС</button> <!-- Променен ID, текст, title и цвят -->
                             <button class="btn btn-secondary btn-lg mb-2" id="settings-button">SET</button> <!-- Променен цвят за по-добра видимост -->
                         </div>
                     </div>
@@ -181,7 +181,7 @@
 
             // Initialize functionalities from buttons.js
             initializeImageGenerationAndUI(); // Handles GO, RAND, and CLEAR button logic
-            loadAndPollPendingJob();          // Handles resuming jobs
+            initializePendingJobState();      // Sets up initial state for pending job (no auto-polling)
 
             // Initialize style selection buttons
             // Collect all unique data-btn-type values and initialize for each.
