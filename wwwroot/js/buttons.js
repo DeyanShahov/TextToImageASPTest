@@ -11,7 +11,7 @@ const CHECK_PENDING_JOB_BUTTON_ID = '#check-pending-job-button'; // Updated ID f
 // Global vars for auto-polling
 let autoPollAttemptCount = 0;
 let autoPollTimeoutId = null;
-const AUTO_POLL_DELAY_MS = 5000; // 5 seconds
+const AUTO_POLL_DELAY_MS = 10000; // 10 seconds
 const MAX_AUTO_POLL_ATTEMPTS = 2;
 
 function disableSubmitButtons(message = "Обработка...") {

@@ -179,6 +179,9 @@ namespace TextToImageASPTest.Services
                                             string status = statusElement.GetString();
                                             Debug.WriteLine($"Job status for {jobId}: {status}");
 
+                                            // Списък с всички познати междинни статуси, които означават "продължи да полираш"
+                                            // var knownPollingStatuses = new List<string> { "pending", "processing", "waiting_comfyui", "processing_comfyui" /*, добави други ако има */ };
+
                                             if (status.Equals("completed", StringComparison.OrdinalIgnoreCase))
                                             {
                                                 // Десериализираме целия отговор в JobResultDto
@@ -197,7 +200,8 @@ namespace TextToImageASPTest.Services
                                                 }
                                             }
                                             else if (status.Equals("pending", StringComparison.OrdinalIgnoreCase) ||
-                                                status.Equals("processing", StringComparison.OrdinalIgnoreCase))
+                                                status.Equals("processing", StringComparison.OrdinalIgnoreCase) ||
+                                                status.Equals("processing_comfyui", StringComparison.OrdinalIgnoreCase))
                                             {
                                                 // Задачата все още се обработва. Продължаваме с постването.
                                                 // Цикълът ще се повтори след забавянето.
