@@ -433,7 +433,8 @@ function initializeImageGenerationAndUI() {
             samplerValue: $('#enable-scheduler').is(':checked') ? $('input[name="scheduler-options"]:checked').val() : null, 
             batchCount: parseInt($('#batch-scale-slider').val(), 10) || 1,
             positivePromptAdditions: $('#positive-prompt-additions').val().trim(),
-            negativePromptAdditions: $('#negative-prompt-additions').val().trim()
+            negativePromptAdditions: $('#negative-prompt-additions').val().trim(),
+            useSystemNegativePrompt: $('#use-system-negative-prompt').is(':checked') // Добавяме новата настройка
         };
 
         const payload = JSON.stringify({
@@ -636,12 +637,14 @@ function initializeAdvancedSettingsToggle() {
     const negativePromptTextarea = $('#negative-prompt-additions');
     const samplerRadios = $('input[name="scheduler-options"]'); 
     const enableSamplerCheckbox = $('#enable-scheduler'); 
+    const useSystemNegativePromptCheckbox = $('#use-system-negative-prompt'); // Нов елемент
 
     const KEY_ENABLE_CFG = 'advancedSettings_localStorage_enableCfgScale';
     const KEY_CFG_VALUE = 'advancedSettings_localStorage_cfgScaleValue';
     const KEY_BATCH_VALUE = 'advancedSettings_localStorage_batchSizeValue'; 
     const KEY_ENABLE_SAMPLER = 'advancedSettings_localStorage_enableSampler';
     const KEY_SAMPLER_VALUE = 'advancedSettings_localStorage_samplerValue';
+    const KEY_USE_SYSTEM_NEGATIVE_PROMPT = 'advancedSettings_localStorage_useSystemNegativePrompt'; // Нов ключ
     const KEY_POSITIVE_PROMPT = 'advancedSettings_localStorage_positivePrompt';
     const KEY_NEGATIVE_PROMPT = 'advancedSettings_localStorage_negativePrompt';
 
@@ -683,6 +686,13 @@ function initializeAdvancedSettingsToggle() {
         
         const storedNegativePrompt = localStorage.getItem(KEY_NEGATIVE_PROMPT);
         if (storedNegativePrompt !== null) negativePromptTextarea.val(storedNegativePrompt);
+
+        const storedUseSystemNegativePrompt = localStorage.getItem(KEY_USE_SYSTEM_NEGATIVE_PROMPT);
+        if (storedUseSystemNegativePrompt !== null) {
+            useSystemNegativePromptCheckbox.prop('checked', JSON.parse(storedUseSystemNegativePrompt));
+        } else {
+            useSystemNegativePromptCheckbox.prop('checked', false); // Default to false
+        }
     }
 
     settingsButton.on('click', function() { advancedSettingsPanel.slideToggle(); });
@@ -732,6 +742,10 @@ function initializeAdvancedSettingsToggle() {
     positivePromptTextarea.on('input', function() { localStorage.setItem(KEY_POSITIVE_PROMPT, $(this).val()); });
     negativePromptTextarea.on('input', function() { localStorage.setItem(KEY_NEGATIVE_PROMPT, $(this).val()); });
 
+    useSystemNegativePromptCheckbox.on('change', function() {
+        localStorage.setItem(KEY_USE_SYSTEM_NEGATIVE_PROMPT, $(this).is(':checked'));
+    });
+
     loadSettings();
 }
 
@@ -747,7 +761,11 @@ if (firstDataUrl) {
         document.body.removeChild(link);
     });
 } else {
-    $imageDisplayArea.append($('<p class="text-warning">Няма върнати изображения.</p>'));
+    // Дефинираме $imageDisplayArea тук, тъй като не е в обхват в този блок код на глобално ниво
+    const $imageDisplayArea = $(IMAGE_DISPLAY_AREA_ID);
+    if ($imageDisplayArea.length) { // Уверяваме се, че елементът съществува, преди да добавяме към него
+        $imageDisplayArea.append($('<p class="text-warning">Няма върнати изображения.</p>'));
+    }
     localStorage.removeItem('lastGeneratedImageUrl');
 }
 

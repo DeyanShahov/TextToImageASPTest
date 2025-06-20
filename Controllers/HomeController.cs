@@ -111,7 +111,7 @@ namespace TextToImageASPTest.Controllers
             // Ensure ILogger is available if not already
             // private readonly ILogger<HomeController> _logger; (should be in class constructor)
             
-            string promptText = !isRandom ? (prompt ?? "").Trim() : CreatePortrait.GeneratePortraitPrompt();
+            string promptText = !isRandom ? AppSettings.SystemNegativePromptPrefix + (prompt ?? "").Trim() + ", " : CreatePortrait.GeneratePortraitPrompt();
 
             if (string.IsNullOrEmpty(promptText))
             {
@@ -130,10 +130,28 @@ namespace TextToImageASPTest.Controllers
                 IsKarras = (model.UseSampler && !string.IsNullOrEmpty(model.SamplerValue))
                                ? model.SamplerValue.Equals("karras", StringComparison.OrdinalIgnoreCase)
                                : new AdvancedSettingsDto().IsKarras,
-                PositivePrompt = model.PositivePromptAdditions ?? string.Empty,
-                NegativePrompt = model.NegativePromptAdditions ?? string.Empty
+                PositivePrompt = model.PositivePromptAdditions + AppSettings.SystemPositivePromptSufix ?? string.Empty, // Вземаме първоначалната стойност
+                NegativePrompt = "" // Ще се определи по-долу
             };
-        
+
+            // --- ТУК ДОБАВИТЕ ВАШИТЕ УСЛОВИЯ ---
+            // Логика за NegativePrompt въз основа на добавения чекбокс
+            if (model.UseSystemNegativePrompt)
+            {
+                advancedSettingsDto.NegativePrompt = AppSettings.SystemNegativePrompt;
+            }
+            else
+            {
+                advancedSettingsDto.NegativePrompt = model.NegativePromptAdditions ?? string.Empty;
+                // Ако потребителят не е въвел негативен промпт И не използва системния, отново използваме стойността по подразбиране
+                if (string.IsNullOrWhiteSpace(advancedSettingsDto.NegativePrompt))
+                {
+                    //advancedSettingsDto.NegativePrompt = "ugly, blurry, low quality";
+                    advancedSettingsDto.NegativePrompt = AppSettings.SystemNegativePrompt;
+                }
+            }
+            // --- КРАЙ НА ВАШИТE УСЛОВИЯ ---
+
             var dispatcher = new Dispatcher(); // Consider injecting this via DI
             try
             {
@@ -266,6 +284,7 @@ namespace TextToImageASPTest.Controllers
         public string SamplerValue { get; set; } // Ще съдържа "normal" или "karras"
         public string PositivePromptAdditions { get; set; }
         public string NegativePromptAdditions { get; set; }
+        public bool UseSystemNegativePrompt { get; set; } // Ново свойство
     }
 
     public class StyleFullNameModel
