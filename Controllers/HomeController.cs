@@ -111,7 +111,7 @@ namespace TextToImageASPTest.Controllers
             // Ensure ILogger is available if not already
             // private readonly ILogger<HomeController> _logger; (should be in class constructor)
             
-            string promptText = !isRandom ? AppSettings.SystemNegativePromptPrefix + (prompt ?? "").Trim() + ", " : CreatePortrait.GeneratePortraitPrompt();
+            string promptText = !isRandom ? AppSettings.SystemPositivePromptPrefix + (prompt ?? "").Trim() + ", " : CreatePortrait.GeneratePortraitPrompt();
 
             if (string.IsNullOrEmpty(promptText))
             {
