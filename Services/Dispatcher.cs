@@ -7,10 +7,13 @@ namespace TextToImageASPTest.Services
     public class Dispatcher
     {
         private static readonly HttpClient httpClient;
-        private const string NginxSendJobUrl = "http://77.77.134.134:81/jobSend";
+        private const string NGINX_BASE_URL = "https://cloudflireservices-app.onrender.com";
+        private const string NginxSendJobUrl = $"{NGINX_BASE_URL}/jobsRedis";
+        //private const string NginxSendJobUrl = "http://77.77.134.134:81/jobSend";
         //private const string NginxSendJobUrl = "http://localhost:81/jobSend";
         //private const string NginxSendJobUrl = "http://localhost:3000/jobsRedis";
-        private const string NginxResultJobUrl = "http://77.77.134.134:81/jobResult"; // New endpoint for polling
+        private const string NginxResultJobUrl = $"{NGINX_BASE_URL}/jobResult"; // New endpoint for polling
+        //private const string NginxResultJobUrl = "http://77.77.134.134:81/jobResult"; // New endpoint for polling
         private const string ApiKey = "redfox-api-key";
         private const int PollingIntervalSeconds = 5;
         // PollingTimeoutSeconds is now handled within PollJobResultAsync
